@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 
 import { ICommand } from '../common/types';
-import { AocTreeDataProvider } from '../providers/aoc-tree-data-provider';
+import { AocTreeDataProvider, AocTreeItem } from '../providers/aoc-tree-data-provider';
 import { injectable } from 'inversify';
 
 @injectable()
@@ -25,13 +25,20 @@ export class GenerateDayCommand implements ICommand {
             return;
         }
 
-        const year = await vscode.window.showInputBox({
-            prompt: 'Year (e.g. 2025)',
-            value: new Date().getFullYear().toString()
-        });
+        // Check if year was passed from tree item context
+        const treeItem = args[0] as AocTreeItem | undefined;
+        const yearFromContext = treeItem?.year;
 
+        let year = yearFromContext;
         if (!year) {
-            return;
+            year = await vscode.window.showInputBox({
+                prompt: 'Year (e.g. 2025)',
+                value: new Date().getFullYear().toString()
+            });
+
+            if (!year) {
+                return;
+            }
         }
 
         const day = await vscode.window.showInputBox({
@@ -80,8 +87,17 @@ export function part2(input: string): number | string {
         );
 
         this.aocProvider.refresh();
+        
+        const dayNum = day.toString().padStart(2, '0');
+        const fileName = `${year}, Day ${dayNum}`;
+        const uri = vscode.Uri.from({
+            scheme: 'aoc-solution',
+            path: `/${fileName}`,
+            query: `realPath=${encodeURIComponent(solutionPath)}`
+        });
 
-        const doc = await vscode.workspace.openTextDocument(solutionPath);
+        let doc = await vscode.workspace.openTextDocument(uri);
+        doc = await vscode.languages.setTextDocumentLanguage(doc, 'typescript');
         vscode.window.showTextDocument(doc);
     }
 }

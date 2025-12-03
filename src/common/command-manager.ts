@@ -11,7 +11,7 @@ export class CommandManager implements ICommandManager {
         for (const c of this.commands) {
             const cmd = vscode.commands.registerCommand(
                 c.id,
-                (...args: any[]) => c.execute(context, args)
+                (...args: any[]) => c.execute(context, ...args)
             );
             context.subscriptions.push(cmd);
         }

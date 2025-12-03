@@ -12,18 +12,34 @@
   "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "aoc-container",
+          "title": "Advent of Code",
+          "icon": "resources/icon.svg"
+        }
+      ]
+    },
     "views": {
-      "explorer": [
+      "aoc-container": [
         {
           "id": "aocExplorer",
           "name": "Advent of Code"
         }
       ]
     },
+    "viewsWelcome": [
+      {
+        "view": "aocExplorer",
+        "contents": "No solutions found.\n[Initialize Workspace](command:aoc.generateDay)"
+      }
+    ],
     "commands": [
       {
         "command": "aoc.generateDay",
-        "title": "AoC: Generate Day"
+        "title": "Add Day",
+        "icon": "$(add)"
       },
       {
         "command": "aoc.openDay",
@@ -33,7 +49,23 @@
         "command": "aoc.runDay",
         "title": "AoC: Run Day"
       }
-    ]
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "aoc.generateDay",
+          "when": "view == aocExplorer",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "aoc.generateDay",
+          "when": "view == aocExplorer && viewItem == year",
+          "group": "inline"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

@@ -45,7 +45,7 @@ export class AocTreeDataProvider implements vscode.TreeDataProvider<AocTreeItem>
 
             // auto-create solutions directory if missing
             if (!fs.existsSync(solutionsRoot)) {
-                fs.mkdirSync(solutionsRoot, { recursive: true });
+                return [];
             }
 
             const years = fs
@@ -95,7 +95,7 @@ export class AocTreeDataProvider implements vscode.TreeDataProvider<AocTreeItem>
                     arguments: [item]
                 };
 
-                item.description = isSolved ? 'Solved' : 'missing';
+
                 return item;
             });
         }

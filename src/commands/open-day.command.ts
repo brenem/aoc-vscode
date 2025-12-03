@@ -7,7 +7,7 @@ import { AocTreeDataProvider, AocTreeItem } from '../providers/aoc-tree-data-pro
 import { injectable } from 'inversify';
 
 @injectable()
-export class OpenDayommand implements ICommand {
+export class OpenDayCommand implements ICommand {
     get id(): string {
         return 'aoc.openDay';
     }
@@ -40,13 +40,22 @@ export class OpenDayommand implements ICommand {
             dayDir = `day${day.toString().padStart(2, '0')}`;
         }
 
-        const solutionPath = path.join(root, 'aoc', year!, dayDir!, 'solution.ts');
+        const solutionPath = path.join(root, 'solutions', year!, dayDir!, 'solution.ts');
         if (!fs.existsSync(solutionPath)) {
             vscode.window.showErrorMessage('solution.ts does not exist; run "AoC: Generate Day" first.');
             return;
         }
 
-        const doc = await vscode.workspace.openTextDocument(solutionPath);
+        const dayNum = dayDir!.replace(/^day/, '');
+        const fileName = `${year}, Day ${dayNum}`;
+        const uri = vscode.Uri.from({
+            scheme: 'aoc-solution',
+            path: `/${fileName}`,
+            query: `realPath=${encodeURIComponent(solutionPath)}`
+        });
+
+        let doc = await vscode.workspace.openTextDocument(uri);
+        doc = await vscode.languages.setTextDocumentLanguage(doc, 'typescript');
         vscode.window.showTextDocument(doc);
     }
 }
