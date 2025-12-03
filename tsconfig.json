@@ -16,6 +16,6 @@
 		// "noUnusedParameters": true,  /* Report errors on unused parameters. */
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
-        "types": ["reflect-metadata", "@types/node"]
+        "types": ["reflect-metadata", "node", "mocha"]
 	}
 }

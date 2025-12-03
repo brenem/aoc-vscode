@@ -9,13 +9,7 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [
-    "onView:aocExplorer",
-    "onCommand:aoc.generateDay",
-    "onCommand:aoc.openDay",
-    "onCommand:aoc.runDay",
-    "onCommand:aoc.runDay"
-  ],
+  "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
     "views": {
@@ -36,12 +30,8 @@
         "title": "AoC: Open Day"
       },
       {
-        "command": "aoc.runDayPart1",
-        "title": "AoC: Run Day (Part 1)"
-      },
-      {
-        "command": "aoc.runDayPart2",
-        "title": "AoC: Run Day (Part 2)"
+        "command": "aoc.runDay",
+        "title": "AoC: Run Day"
       }
     ]
   },

@@ -14,19 +14,17 @@ export async function runDay(root: string, part: 1 | 2) {
     }
 
     const filePath = active.document.uri.fsPath;
-    // naive parse to find year/day by path: .../aoc/YYYY/dayXX/solution.ts
+    // naive parse to find year/day by path: .../solutions/YYYY/dayXX/solution.ts
     const segments = filePath.split(path.sep);
-    const solutionIndex = segments.lastIndexOf('solution.ts');
-    // not super robust, so we'll do something simpler:
-    const aocIndex = segments.lastIndexOf('aoc');
-    if (aocIndex === -1 || aocIndex + 3 > segments.length) {
-        vscode.window.showErrorMessage('This file is not inside an aoc/YYYY/dayXX/ folder.');
+    const solutionsIndex = segments.lastIndexOf('solutions');
+    if (solutionsIndex === -1 || solutionsIndex + 3 > segments.length) {
+        vscode.window.showErrorMessage('This file is not inside a solutions/YYYY/dayXX/ folder.');
         return;
     }
 
-    const year = segments[aocIndex + 1];
-    const dayDir = segments[aocIndex + 2];
-    const inputPath = path.join(root, 'aoc', year, dayDir, 'input.txt');
+    const year = segments[solutionsIndex + 1];
+    const dayDir = segments[solutionsIndex + 2];
+    const inputPath = path.join(root, 'solutions', year, dayDir, 'input.txt');
 
     const terminal =
         vscode.window.terminals.find(t => t.name === 'AoC Runner') ??

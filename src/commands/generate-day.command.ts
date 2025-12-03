@@ -51,7 +51,7 @@ export class GenerateDayCommand implements ICommand {
         }
 
         const dayDirName = `day${day.toString().padStart(2, '0')}`;
-        const dayDir = path.join(root, 'aoc', year, dayDirName);
+        const dayDir = path.join(root, 'solutions', year, dayDirName);
 
         fs.mkdirSync(dayDir, { recursive: true });
 

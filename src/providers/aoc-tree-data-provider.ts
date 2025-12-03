@@ -34,40 +34,40 @@ export class AocTreeDataProvider implements vscode.TreeDataProvider<AocTreeItem>
         return element;
     }
 
-    getChildren(element?: AocTreeItem): Thenable<AocTreeItem[]> {
+    async getChildren(element?: AocTreeItem): Promise<AocTreeItem[]> {
         if (!this.workspaceRoot) {
             vscode.window.showInformationMessage('Open a workspace to use AoC Explorer');
-            return Promise.resolve([]);
+            return [];
         }
 
         if (!element) {
-            const aocRoot = path.join(this.workspaceRoot, 'aoc');
-            if (!fs.existsSync(aocRoot)) {
-                return Promise.resolve([]);
+            const solutionsRoot = path.join(this.workspaceRoot, 'solutions');
+
+            // auto-create solutions directory if missing
+            if (!fs.existsSync(solutionsRoot)) {
+                fs.mkdirSync(solutionsRoot, { recursive: true });
             }
 
             const years = fs
-                .readdirSync(aocRoot, { withFileTypes: true })
+                .readdirSync(solutionsRoot, { withFileTypes: true })
                 .filter(d => d.isDirectory())
                 .map(d => d.name)
                 .sort();
 
-            return Promise.resolve(
-                years.map(year => new AocTreeItem(
-                    year,
-                    vscode.TreeItemCollapsibleState.Collapsed,
-                    'year',
-                    year,
-                    undefined
-                )
+            return years.map(year => new AocTreeItem(
+                year,
+                vscode.TreeItemCollapsibleState.Collapsed,
+                'year',
+                year,
+                undefined
             ));
         }
 
         if (element.contextValue === 'year' && element.year) {
             // children: days for given year
-            const yearDir = path.join(this.workspaceRoot, 'aoc', element.year);
+            const yearDir = path.join(this.workspaceRoot, 'solutions', element.year);
             if (!fs.existsSync(yearDir)) {
-                return Promise.resolve([]);
+                return [];
             }
 
             const days = fs
@@ -76,32 +76,30 @@ export class AocTreeDataProvider implements vscode.TreeDataProvider<AocTreeItem>
                 .map(d => d.name)
                 .sort();
 
-            return Promise.resolve(
-                days.map(dayDirName => {
-                    const label = `Day ${dayDirName.replace(/^day/, '').padStart(2, '0')}`;
-                    const solutionPath = path.join(yearDir, dayDirName, 'solution.ts');
-                    const isSolved = fs.existsSync(solutionPath); // placeholder for "status"
+            return days.map(dayDirName => {
+                const label = `Day ${dayDirName.replace(/^day/, '').padStart(2, '0')}`;
+                const solutionPath = path.join(yearDir, dayDirName, 'solution.ts');
+                const isSolved = fs.existsSync(solutionPath); // placeholder for "status"
 
-                    const item = new AocTreeItem(
-                        label,
-                        vscode.TreeItemCollapsibleState.None,
-                        'day',
-                        element.year,
-                        dayDirName
-                    );
+                const item = new AocTreeItem(
+                    label,
+                    vscode.TreeItemCollapsibleState.None,
+                    'day',
+                    element.year!,
+                    dayDirName
+                );
 
-                    item.command = {
-                        command: 'aoc.openDay',
-                        title: 'Open Day',
-                        arguments: [item]
-                    };
+                item.command = {
+                    command: 'aoc.openDay',
+                    title: 'Open Day',
+                    arguments: [item]
+                };
 
-                    item.description = isSolved ? 'Solved' : 'missing';
-                    return item;
-                })
-            );
+                item.description = isSolved ? 'Solved' : 'missing';
+                return item;
+            });
         }
 
-        return Promise.resolve([]);
+        return [];
     }
 }
