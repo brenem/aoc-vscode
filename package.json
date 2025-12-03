@@ -1,0 +1,68 @@
+{
+  "name": "aoc-vscode",
+  "displayName": "aoc-vscode",
+  "description": "An extension for working on Advent of Code solutions",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.106.1"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onView:aocExplorer",
+    "onCommand:aoc.generateDay",
+    "onCommand:aoc.openDay",
+    "onCommand:aoc.runDay",
+    "onCommand:aoc.runDay"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "views": {
+      "explorer": [
+        {
+          "id": "aocExplorer",
+          "name": "Advent of Code"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "aoc.generateDay",
+        "title": "AoC: Generate Day"
+      },
+      {
+        "command": "aoc.openDay",
+        "title": "AoC: Open Day"
+      },
+      {
+        "command": "aoc.runDayPart1",
+        "title": "AoC: Run Day (Part 1)"
+      },
+      {
+        "command": "aoc.runDayPart2",
+        "title": "AoC: Run Day (Part 2)"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^22.19.1",
+    "@types/vscode": "^1.106.1",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^2.5.2",
+    "eslint": "^9.39.1",
+    "inversify": "^7.10.5",
+    "reflect-metadata": "^0.2.2",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.3"
+  }
+}
