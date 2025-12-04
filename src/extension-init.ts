@@ -15,6 +15,7 @@ import { AddUtilityCommand } from './commands/add-utility.command';
 import { ConfigureSessionCommand } from './commands/configure-session.command';
 import { DownloadInputCommand } from './commands/download-input.command';
 import { RunPartCommand } from './commands/run-part.command';
+import { OpenInputCommand } from './commands/open-input.command';
 import { SolutionFileSystemProvider } from './providers/solution-file-system-provider';
 import { SolutionCodeLensProvider } from './providers/solution-codelens-provider';
 import { AocSessionService } from './services/aoc-session.service';
@@ -44,6 +45,7 @@ function buildServiceContainer(context: vscode.ExtensionContext, serviceManager:
     serviceManager.addSingleton<ICommand>(ICommand, ConfigureSessionCommand);
     serviceManager.addSingleton<ICommand>(ICommand, DownloadInputCommand);
     serviceManager.addSingleton<ICommand>(ICommand, RunPartCommand);
+    serviceManager.addSingleton<ICommand>(ICommand, OpenInputCommand);
 
     const solutionProvider = new SolutionFileSystemProvider();
     context.subscriptions.push(vscode.workspace.registerFileSystemProvider('aoc-solution', solutionProvider, { isCaseSensitive: true }));
@@ -75,25 +77,31 @@ function addTreeDataProvider(serviceManager: IServiceManager, context: vscode.Ex
 	context.subscriptions.push(
 		vscode.window.onDidChangeActiveTextEditor(editor => {
 			if (editor && editor.document.uri.scheme === 'aoc-solution') {
-				// Parse year and day from the URI path
-				// Format: /YYYY, Day DD: solution.ts
-				const match = editor.document.uri.path.match(/^\/(\d{4}),\s*Day\s*(\d{2}):/);
+				// Parse year, day, and filename from the URI path
+				// Format: /YYYY, Day DD: filename.ts
+				const match = editor.document.uri.path.match(/^\/(\d{4}),\s*Day\s*(\d{2}):\s*(.+)$/);
 				if (match) {
 					const year = match[1];
 					const dayNum = match[2];
+					const fileName = match[3];
 					const dayDir = `day${dayNum}`;
 
-					// Find the corresponding tree item
-					const dayItem = new AocTreeItem(
-						`Day ${dayNum}`,
+					// Get the real path from query parameter
+					const query = new URLSearchParams(editor.document.uri.query);
+					const realPath = query.get('realPath');
+
+					// Find the corresponding tree item (the file, not the day)
+					const fileItem = new AocTreeItem(
+						fileName,
 						vscode.TreeItemCollapsibleState.None,
-						'day',
+						'dayFile',
 						year,
-						dayDir
+						dayDir,
+						realPath || undefined
 					);
 
 					// Reveal the item in the tree view
-					treeView.reveal(dayItem, { select: true, focus: false });
+					treeView.reveal(fileItem, { select: true, focus: false });
 				}
 			}
 		})

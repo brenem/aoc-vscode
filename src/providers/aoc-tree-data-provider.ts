@@ -7,7 +7,7 @@ export class AocTreeItem extends vscode.TreeItem {
     constructor(
         public readonly label: string,
         public readonly collapsibleState: vscode.TreeItemCollapsibleState,
-        public readonly contextValue: 'year' | 'day' | 'shared' | 'utilsFolder' | 'utilityFile',
+        public readonly contextValue: 'year' | 'day' | 'dayFile' | 'shared' | 'utilsFolder' | 'utilityFile',
         public readonly year?: string,
         public readonly dayDir?: string,
         public readonly filePath?: string,
@@ -33,6 +33,52 @@ export class AocTreeDataProvider implements vscode.TreeDataProvider<AocTreeItem>
 
     getTreeItem(element: AocTreeItem): vscode.TreeItem {
         return element;
+    }
+
+    getParent(element: AocTreeItem): AocTreeItem | undefined {
+        // Day items have a year parent
+        if (element.contextValue === 'day' && element.year) {
+            return new AocTreeItem(
+                element.year,
+                vscode.TreeItemCollapsibleState.Collapsed,
+                'year',
+                element.year,
+                undefined
+            );
+        }
+        
+        // Day files have a day parent
+        if (element.contextValue === 'dayFile' && element.year && element.dayDir) {
+            const dayNum = element.dayDir.replace(/^day/, '').padStart(2, '0');
+            return new AocTreeItem(
+                `Day ${dayNum}`,
+                vscode.TreeItemCollapsibleState.Collapsed,
+                'day',
+                element.year,
+                element.dayDir
+            );
+        }
+        
+        // Utility files have utilsFolder parent
+        if (element.contextValue === 'utilityFile') {
+            return new AocTreeItem(
+                'utils',
+                vscode.TreeItemCollapsibleState.Collapsed,
+                'utilsFolder'
+            );
+        }
+        
+        // utilsFolder has shared parent
+        if (element.contextValue === 'utilsFolder') {
+            return new AocTreeItem(
+                'Shared',
+                vscode.TreeItemCollapsibleState.Collapsed,
+                'shared'
+            );
+        }
+        
+        // Year and Shared items are at root level
+        return undefined;
     }
 
     async getChildren(element?: AocTreeItem): Promise<AocTreeItem[]> {
@@ -93,26 +139,64 @@ export class AocTreeDataProvider implements vscode.TreeDataProvider<AocTreeItem>
 
             return days.map(dayDirName => {
                 const label = `Day ${dayDirName.replace(/^day/, '').padStart(2, '0')}`;
-                const solutionPath = path.join(yearDir, dayDirName, 'solution.ts');
-                const isSolved = fs.existsSync(solutionPath); // placeholder for "status"
 
                 const item = new AocTreeItem(
                     label,
-                    vscode.TreeItemCollapsibleState.None,
+                    vscode.TreeItemCollapsibleState.Collapsed,
                     'day',
                     element.year!,
                     dayDirName
                 );
 
-                item.command = {
-                    command: 'aoc.openDay',
-                    title: 'Open Day',
-                    arguments: [item]
-                };
-
-
                 return item;
             });
+        }
+
+        // Handle day items - show solution.ts and input.txt
+        if (element.contextValue === 'day' && element.year && element.dayDir) {
+            const dayDir = path.join(this.workspaceRoot, 'solutions', element.year, element.dayDir);
+            const solutionPath = path.join(dayDir, 'solution.ts');
+            const inputPath = path.join(dayDir, 'input.txt');
+
+            const files: AocTreeItem[] = [];
+
+            // Add solution.ts
+            if (fs.existsSync(solutionPath)) {
+                const solutionItem = new AocTreeItem(
+                    'solution.ts',
+                    vscode.TreeItemCollapsibleState.None,
+                    'dayFile',
+                    element.year,
+                    element.dayDir,
+                    solutionPath
+                );
+                solutionItem.command = {
+                    command: 'aoc.openDay',
+                    title: 'Open Solution',
+                    arguments: [element] // Pass the parent day item
+                };
+                files.push(solutionItem);
+            }
+
+            // Add input.txt
+            if (fs.existsSync(inputPath)) {
+                const inputItem = new AocTreeItem(
+                    'input.txt',
+                    vscode.TreeItemCollapsibleState.None,
+                    'dayFile',
+                    element.year,
+                    element.dayDir,
+                    inputPath
+                );
+                inputItem.command = {
+                    command: 'aoc.openInput',
+                    title: 'Open Input',
+                    arguments: [element.year, element.dayDir, inputPath]
+                };
+                files.push(inputItem);
+            }
+
+            return files;
         }
 
         // Handle shared folder - show utils subfolder
