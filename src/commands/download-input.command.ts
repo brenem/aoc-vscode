@@ -63,7 +63,9 @@ export class DownloadInputCommand implements ICommand {
                     return n >= 1 && n <= 25 ? undefined : 'Enter a number between 1 and 25';
                 }
             });
-            if (!day) return;
+            if (!day) {
+                return;
+            }
 
             dayDir = `day${day.padStart(2, '0')}`;
         }

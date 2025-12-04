@@ -14,7 +14,9 @@ import { RefreshCommand } from './commands/refresh.command';
 import { AddUtilityCommand } from './commands/add-utility.command';
 import { ConfigureSessionCommand } from './commands/configure-session.command';
 import { DownloadInputCommand } from './commands/download-input.command';
+import { RunPartCommand } from './commands/run-part.command';
 import { SolutionFileSystemProvider } from './providers/solution-file-system-provider';
+import { SolutionCodeLensProvider } from './providers/solution-codelens-provider';
 import { AocSessionService } from './services/aoc-session.service';
 import { AocApiService } from './services/aoc-api.service';
 
@@ -41,9 +43,13 @@ function buildServiceContainer(context: vscode.ExtensionContext, serviceManager:
     serviceManager.addSingleton<ICommand>(ICommand, AddUtilityCommand);
     serviceManager.addSingleton<ICommand>(ICommand, ConfigureSessionCommand);
     serviceManager.addSingleton<ICommand>(ICommand, DownloadInputCommand);
+    serviceManager.addSingleton<ICommand>(ICommand, RunPartCommand);
 
     const solutionProvider = new SolutionFileSystemProvider();
     context.subscriptions.push(vscode.workspace.registerFileSystemProvider('aoc-solution', solutionProvider, { isCaseSensitive: true }));
+
+    const codeLensProvider = new SolutionCodeLensProvider();
+    context.subscriptions.push(vscode.languages.registerCodeLensProvider({ language: 'typescript', scheme: 'aoc-solution' }, codeLensProvider));
 
     addTreeDataProvider(serviceManager);
 
