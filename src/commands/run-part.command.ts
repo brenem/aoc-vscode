@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as ts from 'typescript';
+import { exec } from 'child_process';
 import { ICommand } from '../common/types';
 import { AocTreeDataProvider } from '../providers/aoc-tree-data-provider';
 import { injectable } from 'inversify';
@@ -9,11 +10,15 @@ import { createRunner } from '../helpers/create-runner';
 
 @injectable()
 export class RunPartCommand implements ICommand {
+    private outputChannel: vscode.OutputChannel;
+
     get id(): string {
         return 'aoc.runPart';
     }
 
-    constructor(private aocProvider: AocTreeDataProvider) {}
+    constructor(private aocProvider: AocTreeDataProvider) {
+        this.outputChannel = vscode.window.createOutputChannel('AoC Runner');
+    }
 
     public async execute(context: vscode.ExtensionContext, ...args: any[]): Promise<void> {
         const root = this.aocProvider.root;
@@ -85,12 +90,27 @@ export class RunPartCommand implements ICommand {
             const runnerJsPath = runnerPath.replace('.ts', '.js');
             fs.writeFileSync(runnerJsPath, result.outputText, 'utf-8');
 
-            // Execute the compiled JavaScript
-            const terminal = vscode.window.terminals.find(t => t.name === 'AoC Runner')
-                ?? vscode.window.createTerminal('AoC Runner');
+            // Clear and show output channel
+            this.outputChannel.clear();
+            this.outputChannel.show(true);
             
-            terminal.show();
-            terminal.sendText(`node "${runnerJsPath}"`);
+            // Execute and capture output
+            exec(`node "${runnerJsPath}"`, { cwd: root }, (error, stdout, stderr) => {
+                if (error) {
+                    this.outputChannel.appendLine(`Error: ${error.message}`);
+                    if (stderr) {
+                        this.outputChannel.appendLine(stderr);
+                    }
+                    return;
+                }
+                
+                if (stdout) {
+                    this.outputChannel.append(stdout);
+                }
+                if (stderr) {
+                    this.outputChannel.append(stderr);
+                }
+            });
 
         } catch (error) {
             vscode.window.showErrorMessage(`Failed to run part: ${error instanceof Error ? error.message : String(error)}`);
