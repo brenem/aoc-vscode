@@ -47,7 +47,7 @@ export class OpenDayCommand implements ICommand {
         }
 
         const dayNum = dayDir!.replace(/^day/, '');
-        const fileName = `${year}, Day ${dayNum}`;
+        const fileName = `${year}, Day ${dayNum} (Typescript)`;
         const uri = vscode.Uri.from({
             scheme: 'aoc-solution',
             path: `/${fileName}`,

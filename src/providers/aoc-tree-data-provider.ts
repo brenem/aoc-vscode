@@ -7,9 +7,10 @@ export class AocTreeItem extends vscode.TreeItem {
     constructor(
         public readonly label: string,
         public readonly collapsibleState: vscode.TreeItemCollapsibleState,
-        public readonly contextValue: 'year' | 'day',
+        public readonly contextValue: 'year' | 'day' | 'shared' | 'utilsFolder' | 'utilityFile',
         public readonly year?: string,
         public readonly dayDir?: string,
+        public readonly filePath?: string,
     ) {
         super(label, collapsibleState);
     }
@@ -48,19 +49,33 @@ export class AocTreeDataProvider implements vscode.TreeDataProvider<AocTreeItem>
                 return [];
             }
 
+            const items: AocTreeItem[] = [];
+
+            // Add shared folder if it exists
+            const sharedDir = path.join(solutionsRoot, 'shared');
+            if (fs.existsSync(sharedDir)) {
+                items.push(new AocTreeItem(
+                    'Shared',
+                    vscode.TreeItemCollapsibleState.Collapsed,
+                    'shared'
+                ));
+            }
+
             const years = fs
                 .readdirSync(solutionsRoot, { withFileTypes: true })
-                .filter(d => d.isDirectory())
+                .filter(d => d.isDirectory() && d.name !== 'shared')
                 .map(d => d.name)
                 .sort();
 
-            return years.map(year => new AocTreeItem(
+            items.push(...years.map(year => new AocTreeItem(
                 year,
                 vscode.TreeItemCollapsibleState.Collapsed,
                 'year',
                 year,
                 undefined
-            ));
+            )));
+
+            return items;
         }
 
         if (element.contextValue === 'year' && element.year) {
@@ -95,6 +110,51 @@ export class AocTreeDataProvider implements vscode.TreeDataProvider<AocTreeItem>
                     arguments: [item]
                 };
 
+
+                return item;
+            });
+        }
+
+        // Handle shared folder - show utils subfolder
+        if (element.contextValue === 'shared') {
+            const utilsDir = path.join(this.workspaceRoot, 'solutions', 'shared', 'utils');
+            if (fs.existsSync(utilsDir)) {
+                return [new AocTreeItem(
+                    'utils',
+                    vscode.TreeItemCollapsibleState.Collapsed,
+                    'utilsFolder'
+                )];
+            }
+            return [];
+        }
+
+        // Handle utils folder - show individual files
+        if (element.contextValue === 'utilsFolder') {
+            const utilsDir = path.join(this.workspaceRoot, 'solutions', 'shared', 'utils');
+            if (!fs.existsSync(utilsDir)) {
+                return [];
+            }
+
+            const files = fs.readdirSync(utilsDir)
+                .filter(f => f.endsWith('.ts'))
+                .sort();
+
+            return files.map(file => {
+                const filePath = path.join(utilsDir, file);
+                const item = new AocTreeItem(
+                    file,
+                    vscode.TreeItemCollapsibleState.None,
+                    'utilityFile',
+                    undefined,
+                    undefined,
+                    filePath
+                );
+
+                item.command = {
+                    command: 'vscode.open',
+                    title: 'Open File',
+                    arguments: [vscode.Uri.file(filePath)]
+                };
 
                 return item;
             });

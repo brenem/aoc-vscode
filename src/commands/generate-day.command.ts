@@ -62,6 +62,24 @@ export class GenerateDayCommand implements ICommand {
 
         fs.mkdirSync(dayDir, { recursive: true });
 
+        // Initialize shared utilities folder on first use
+        const sharedDir = path.join(root, 'solutions', 'shared', 'utils');
+        if (!fs.existsSync(sharedDir)) {
+            fs.mkdirSync(sharedDir, { recursive: true });
+            
+            // Copy template utilities
+            const templatesDir = path.join(context.extensionPath, 'templates', 'utils');
+            const utilFiles = ['grid.ts', 'math.ts', 'string.ts', 'array.ts'];
+            
+            for (const file of utilFiles) {
+                const templatePath = path.join(templatesDir, file);
+                const targetPath = path.join(sharedDir, file);
+                if (fs.existsSync(templatePath)) {
+                    fs.copyFileSync(templatePath, targetPath);
+                }
+            }
+        }
+
         const solutionPath = path.join(dayDir, 'solution.ts');
         if (!fs.existsSync(solutionPath)) {
             const template = `export function part1(input: string): number | string {
@@ -72,7 +90,9 @@ export function part2(input: string): number | string {
     return 0;
 }
 
-// You can import shared utilities from '../shared/...' as needed.
+// You can import shared utilities from '../../shared/utils'
+// Example: import { parseGrid } from '../../shared/utils/grid';
+
 `;
             fs.writeFileSync(solutionPath, template, 'utf-8');
         }

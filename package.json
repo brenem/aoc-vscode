@@ -48,8 +48,37 @@
       {
         "command": "aoc.runDay",
         "title": "AoC: Run Day"
+      },
+      {
+        "command": "aoc.addUtility",
+        "title": "Add Utility File",
+        "icon": "$(add)"
+      },
+      {
+        "command": "aoc.configureSession",
+        "title": "AoC: Configure Session Token"
+      },
+      {
+        "command": "aoc.downloadInput",
+        "title": "AoC: Download Input",
+        "icon": "$(cloud-download)"
       }
     ],
+    "configuration": {
+      "title": "Advent of Code",
+      "properties": {
+        "aoc.githubRepo": {
+          "type": "string",
+          "default": "",
+          "description": "Your GitHub repository (e.g., username/repo) for User-Agent header"
+        },
+        "aoc.contactEmail": {
+          "type": "string",
+          "default": "",
+          "description": "Your contact email for User-Agent header"
+        }
+      }
+    },
     "menus": {
       "view/title": [
         {
@@ -63,6 +92,16 @@
           "command": "aoc.generateDay",
           "when": "view == aocExplorer && viewItem == year",
           "group": "inline"
+        },
+        {
+          "command": "aoc.addUtility",
+          "when": "view == aocExplorer && viewItem == utilsFolder",
+          "group": "inline"
+        },
+        {
+          "command": "aoc.downloadInput",
+          "when": "view == aocExplorer && viewItem == day",
+          "group": "1_modification"
         }
       ]
     }

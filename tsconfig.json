@@ -17,5 +17,8 @@
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
         "types": ["reflect-metadata", "node", "mocha"]
-	}
+	},
+	"exclude": [
+		"templates/**"
+	]
 }
