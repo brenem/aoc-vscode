@@ -66,11 +66,11 @@ export class GenerateDayCommand implements ICommand {
         const sharedDir = path.join(root, 'solutions', 'shared', 'utils');
         if (!fs.existsSync(sharedDir)) {
             fs.mkdirSync(sharedDir, { recursive: true });
-            
+
             // Copy template utilities
             const templatesDir = path.join(context.extensionPath, 'templates', 'utils');
             const utilFiles = ['grid.ts', 'math.ts', 'string.ts', 'array.ts'];
-            
+
             for (const file of utilFiles) {
                 const templatePath = path.join(templatesDir, file);
                 const targetPath = path.join(sharedDir, file);
@@ -107,12 +107,12 @@ export function part2(input: string): number | string {
         );
 
         this.aocProvider.refresh();
-        
+
         const dayNum = day.toString().padStart(2, '0');
-        const fileName = `${year}, Day ${dayNum}`;
+        const fileName = `${year}, Day ${dayNum}: solution`;
         const uri = vscode.Uri.from({
             scheme: 'aoc-solution',
-            path: `/${fileName}`,
+            path: `/${fileName}.ts`,
             query: `realPath=${encodeURIComponent(solutionPath)}`
         });
 

@@ -6,7 +6,7 @@ import { ServiceManager } from './common/service-manager';
 import { ServiceContainer } from './common/service-container';
 import { ICommandManager, IServiceContainer, IServiceManager, ICommand } from './common/types';
 import { CommandManager } from './common/command-manager';
-import { AocTreeDataProvider } from './providers/aoc-tree-data-provider';
+import { AocTreeDataProvider, AocTreeItem } from './providers/aoc-tree-data-provider';
 import { GenerateDayCommand } from './commands/generate-day.command';
 import { OpenDayCommand } from './commands/open-day.command';
 import { RunDayCommand } from './commands/run-day.command';
@@ -51,12 +51,12 @@ function buildServiceContainer(context: vscode.ExtensionContext, serviceManager:
     const codeLensProvider = new SolutionCodeLensProvider();
     context.subscriptions.push(vscode.languages.registerCodeLensProvider({ language: 'typescript', scheme: 'aoc-solution' }, codeLensProvider));
 
-    addTreeDataProvider(serviceManager);
+    addTreeDataProvider(serviceManager, context);
 
     return serviceContainer;
 }
 
-function addTreeDataProvider(serviceManager: IServiceManager) {
+function addTreeDataProvider(serviceManager: IServiceManager, context: vscode.ExtensionContext) {
     const workspaceFolders = vscode.workspace.workspaceFolders;
 	if (!workspaceFolders) {
 		console.log('No workspace open. AoC extension is idle.');
@@ -65,7 +65,39 @@ function addTreeDataProvider(serviceManager: IServiceManager) {
 	const root = workspaceFolders?.[0].uri.fsPath || '';
 
 	const aocProvider = new AocTreeDataProvider(root);
-	vscode.window.registerTreeDataProvider('aocExplorer', aocProvider);
+	const treeView = vscode.window.createTreeView('aocExplorer', {
+		treeDataProvider: aocProvider
+	});
+
+	context.subscriptions.push(treeView);
+
+	// Sync tree view selection with active editor
+	context.subscriptions.push(
+		vscode.window.onDidChangeActiveTextEditor(editor => {
+			if (editor && editor.document.uri.scheme === 'aoc-solution') {
+				// Parse year and day from the URI path
+				// Format: /YYYY, Day DD: solution.ts
+				const match = editor.document.uri.path.match(/^\/(\d{4}),\s*Day\s*(\d{2}):/);
+				if (match) {
+					const year = match[1];
+					const dayNum = match[2];
+					const dayDir = `day${dayNum}`;
+
+					// Find the corresponding tree item
+					const dayItem = new AocTreeItem(
+						`Day ${dayNum}`,
+						vscode.TreeItemCollapsibleState.None,
+						'day',
+						year,
+						dayDir
+					);
+
+					// Reveal the item in the tree view
+					treeView.reveal(dayItem, { select: true, focus: false });
+				}
+			}
+		})
+	);
 
     serviceManager.addSingletonInstance<AocTreeDataProvider>(AocTreeDataProvider, aocProvider);
 }
