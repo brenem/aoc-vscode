@@ -8,9 +8,9 @@ import { injectable } from 'inversify';
 import { createRunner } from '../helpers/create-runner';
 
 @injectable()
-export class RunPartCommand implements ICommand {
+export class DebugPartCommand implements ICommand {
     get id(): string {
-        return 'aoc.runPart';
+        return 'aoc.debugPart';
     }
 
     constructor(private aocProvider: AocTreeDataProvider) {}
@@ -62,15 +62,39 @@ export class RunPartCommand implements ICommand {
                 fs.mkdirSync(context.globalStorageUri.fsPath, { recursive: true });
             }
 
-            // Create runner script
+            // First, compile the solution.ts to .js with source maps
+            const solutionDir = path.dirname(solutionPath);
+            const solutionFileName = path.basename(solutionPath, '.ts');
+            const compiledSolutionPath = path.join(solutionDir, `${solutionFileName}.js`);
+            const sourceMapPath = path.join(solutionDir, `${solutionFileName}.js.map`);
+
+            const solutionCode = fs.readFileSync(solutionPath, 'utf-8');
+            const solutionResult = ts.transpileModule(solutionCode, {
+                compilerOptions: {
+                    module: ts.ModuleKind.CommonJS,
+                    target: ts.ScriptTarget.ES2020,
+                    esModuleInterop: true,
+                    skipLibCheck: true,
+                    sourceMap: true
+                },
+                fileName: solutionPath
+            });
+
+            // Write compiled solution and source map
+            fs.writeFileSync(compiledSolutionPath, solutionResult.outputText, 'utf-8');
+            if (solutionResult.sourceMapText) {
+                fs.writeFileSync(sourceMapPath, solutionResult.sourceMapText, 'utf-8');
+            }
+
+            // Create runner script that imports from the compiled .js file
             const runnerPath = createRunner({
-                solutionPath,
+                solutionPath: compiledSolutionPath, // Use compiled .js instead of .ts
                 inputPath,
                 part: part as 1 | 2,
                 tempDir: context.globalStorageUri.fsPath
             });
 
-            // Compile TypeScript to JavaScript using TS compiler API
+            // Compile runner TypeScript to JavaScript
             const runnerCode = fs.readFileSync(runnerPath, 'utf-8');
             const result = ts.transpileModule(runnerCode, {
                 compilerOptions: {
@@ -85,15 +109,32 @@ export class RunPartCommand implements ICommand {
             const runnerJsPath = runnerPath.replace('.ts', '.js');
             fs.writeFileSync(runnerJsPath, result.outputText, 'utf-8');
 
-            // Execute the compiled JavaScript
-            const terminal = vscode.window.terminals.find(t => t.name === 'AoC Runner')
-                ?? vscode.window.createTerminal('AoC Runner');
-            
-            terminal.show();
-            terminal.sendText(`node "${runnerJsPath}"`);
+            // Create debug configuration with source map path overrides
+            // This maps the real file path to the virtual URI
+            const debugConfig: vscode.DebugConfiguration = {
+                type: 'node',
+                request: 'launch',
+                name: `Debug Part ${part}`,
+                program: runnerJsPath,
+                cwd: root,
+                console: 'integratedTerminal',
+                internalConsoleOptions: 'neverOpen',
+                skipFiles: ['<node_internals>/**'],
+                sourceMaps: true,
+                outFiles: [
+                    `${solutionDir}/**/*.js`,
+                    `${context.globalStorageUri.fsPath}/**/*.js`
+                ],
+                sourceMapPathOverrides: {
+                    [solutionPath]: active.document.uri.toString()
+                }
+            };
+
+            // Start debugging
+            await vscode.debug.startDebugging(undefined, debugConfig);
 
         } catch (error) {
-            vscode.window.showErrorMessage(`Failed to run part: ${error instanceof Error ? error.message : String(error)}`);
+            vscode.window.showErrorMessage(`Failed to debug part: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
 }

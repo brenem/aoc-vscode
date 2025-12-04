@@ -69,6 +69,10 @@
         "title": "AoC: Open Input"
       },
       {
+        "command": "aoc.debugPart",
+        "title": "AoC: Debug Part"
+      },
+      {
         "command": "aoc.downloadInput",
         "title": "AoC: Download Input",
         "icon": "$(cloud-download)"
@@ -133,6 +137,7 @@
     "eslint": "^9.39.1",
     "inversify": "^7.10.5",
     "reflect-metadata": "^0.2.2",
+    "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.3"
   }

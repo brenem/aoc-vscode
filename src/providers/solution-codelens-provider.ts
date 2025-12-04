@@ -23,22 +23,38 @@ export class SolutionCodeLensProvider implements vscode.CodeLensProvider {
 
             if (part1Match) {
                 const range = new vscode.Range(i, 0, i, line.length);
-                const command: vscode.Command = {
+                
+                // Run button
+                codeLenses.push(new vscode.CodeLens(range, {
                     title: '▶ Run Part 1',
                     command: 'aoc.runPart',
                     arguments: [1]
-                };
-                codeLenses.push(new vscode.CodeLens(range, command));
+                }));
+                
+                // Debug button
+                codeLenses.push(new vscode.CodeLens(range, {
+                    title: '🐛 Debug Part 1',
+                    command: 'aoc.debugPart',
+                    arguments: [1]
+                }));
             }
 
             if (part2Match) {
                 const range = new vscode.Range(i, 0, i, line.length);
-                const command: vscode.Command = {
+                
+                // Run button
+                codeLenses.push(new vscode.CodeLens(range, {
                     title: '▶ Run Part 2',
                     command: 'aoc.runPart',
                     arguments: [2]
-                };
-                codeLenses.push(new vscode.CodeLens(range, command));
+                }));
+                
+                // Debug button
+                codeLenses.push(new vscode.CodeLens(range, {
+                    title: '🐛 Debug Part 2',
+                    command: 'aoc.debugPart',
+                    arguments: [2]
+                }));
             }
         }
 

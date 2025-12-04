@@ -16,6 +16,7 @@ import { ConfigureSessionCommand } from './commands/configure-session.command';
 import { DownloadInputCommand } from './commands/download-input.command';
 import { RunPartCommand } from './commands/run-part.command';
 import { OpenInputCommand } from './commands/open-input.command';
+import { DebugPartCommand } from './commands/debug-part.command';
 import { SolutionFileSystemProvider } from './providers/solution-file-system-provider';
 import { SolutionCodeLensProvider } from './providers/solution-codelens-provider';
 import { AocSessionService } from './services/aoc-session.service';
@@ -46,6 +47,7 @@ function buildServiceContainer(context: vscode.ExtensionContext, serviceManager:
     serviceManager.addSingleton<ICommand>(ICommand, DownloadInputCommand);
     serviceManager.addSingleton<ICommand>(ICommand, RunPartCommand);
     serviceManager.addSingleton<ICommand>(ICommand, OpenInputCommand);
+    serviceManager.addSingleton<ICommand>(ICommand, DebugPartCommand);
 
     const solutionProvider = new SolutionFileSystemProvider();
     context.subscriptions.push(vscode.workspace.registerFileSystemProvider('aoc-solution', solutionProvider, { isCaseSensitive: true }));
