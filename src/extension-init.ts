@@ -24,6 +24,8 @@ import { AocSessionService } from './services/aoc-session.service';
 import { AocApiService } from './services/aoc-api.service';
 import { StatsService } from './services/stats.service';
 import { PuzzleService } from './services/puzzle.service';
+import { TreeViewService } from './services/tree-view.service';
+import { PuzzleWebviewSerializer } from './services/puzzle-webview-serializer';
 import { ExtensionContext, ICommand, ICommandManager } from './common/types';
 import { CommandManager } from './common/command-manager';
 
@@ -44,6 +46,7 @@ function registerServices(context: vscode.ExtensionContext) {
 	container.registerSingleton(AocApiService);
 	container.registerSingleton(StatsService);
 	container.registerSingleton(PuzzleService);
+	container.registerSingleton(TreeViewService);
 	container.registerSingleton(SolutionFileSystemProvider);
 	container.registerSingleton(SolutionCodeLensProvider);
 	container.registerSingleton(AocTreeDataProvider);
@@ -73,6 +76,12 @@ function addProviders(context: vscode.ExtensionContext) {
 	const codeLensProvider = container.resolve(SolutionCodeLensProvider);
 	context.subscriptions.push(vscode.languages.registerCodeLensProvider({ language: 'typescript', scheme: 'aoc-solution' }, codeLensProvider));
 
+	// Register puzzle webview serializer
+	const puzzleSerializer = container.resolve(PuzzleWebviewSerializer);
+	context.subscriptions.push(
+		vscode.window.registerWebviewPanelSerializer('aocPuzzle', puzzleSerializer)
+	);
+
 	addTreeDataProvider(context);
 }
 
@@ -82,6 +91,10 @@ function addTreeDataProvider(context: vscode.ExtensionContext) {
 	const treeView = vscode.window.createTreeView('aocExplorer', {
 		treeDataProvider: aocProvider
 	});
+
+	// Register tree view with service for programmatic access
+	const treeViewService = container.resolve(TreeViewService);
+	treeViewService.setTreeView(treeView);
 
 	context.subscriptions.push(treeView);
 

@@ -218,7 +218,7 @@ export class AocTreeDataProvider implements vscode.TreeDataProvider<AocTreeItem>
                 item.command = {
                     command: 'aoc.viewPuzzle',
                     title: 'View Puzzle',
-                    arguments: [element.year!, dayNum]
+                    arguments: [element.year!, dayNum, item]
                 };
 
                 return item;
