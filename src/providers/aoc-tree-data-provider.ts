@@ -214,6 +214,13 @@ export class AocTreeDataProvider implements vscode.TreeDataProvider<AocTreeItem>
                     }
                 }
 
+                // Add command to view puzzle
+                item.command = {
+                    command: 'aoc.viewPuzzle',
+                    title: 'View Puzzle',
+                    arguments: [element.year!, dayNum]
+                };
+
                 return item;
             });
         }

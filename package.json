@@ -76,6 +76,11 @@
         "command": "aoc.downloadInput",
         "title": "AoC: Download Input",
         "icon": "$(cloud-download)"
+      },
+      {
+        "command": "aoc.viewPuzzle",
+        "title": "AoC: View Puzzle",
+        "icon": "$(book)"
       }
     ],
     "configuration": {

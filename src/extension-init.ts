@@ -13,11 +13,13 @@ import { DownloadInputCommand } from './commands/download-input.command';
 import { RunPartCommand } from './commands/run-part.command';
 import { OpenInputCommand } from './commands/open-input.command';
 import { DebugPartCommand } from './commands/debug-part.command';
+import { ViewPuzzleCommand } from './commands/view-puzzle.command';
 import { SolutionFileSystemProvider } from './providers/solution-file-system-provider';
 import { SolutionCodeLensProvider } from './providers/solution-codelens-provider';
 import { AocSessionService } from './services/aoc-session.service';
 import { AocApiService } from './services/aoc-api.service';
 import { StatsService } from './services/stats.service';
+import { PuzzleService } from './services/puzzle.service';
 import { ExtensionContext, ICommand, ICommandManager } from './common/types';
 import { CommandManager } from './common/command-manager';
 
@@ -37,6 +39,7 @@ function registerServices(context: vscode.ExtensionContext) {
 	container.registerSingleton(AocSessionService);
 	container.registerSingleton(AocApiService);
 	container.registerSingleton(StatsService);
+	container.registerSingleton(PuzzleService);
 	container.registerSingleton(SolutionFileSystemProvider);
 	container.registerSingleton(SolutionCodeLensProvider);
 	container.registerSingleton(AocTreeDataProvider);
@@ -52,6 +55,7 @@ function registerServices(context: vscode.ExtensionContext) {
 	container.register<ICommand>(ICommand, { useClass: RunPartCommand });
 	container.register<ICommand>(ICommand, { useClass: OpenInputCommand });
 	container.register<ICommand>(ICommand, { useClass: DebugPartCommand });
+	container.register<ICommand>(ICommand, { useClass: ViewPuzzleCommand });
 }
 
 function addProviders(context: vscode.ExtensionContext) {
