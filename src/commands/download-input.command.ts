@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
-import { injectable } from 'inversify';
+import { injectable } from 'tsyringe';
 import { ICommand } from '../common/types';
 import { AocSessionService } from '../services/aoc-session.service';
 import { AocApiService } from '../services/aoc-api.service';

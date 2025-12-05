@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { injectable } from 'inversify';
+import { injectable } from 'tsyringe';
 import { ICommand } from '../common/types';
 import { AocSessionService } from '../services/aoc-session.service';
 

@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { injectable } from 'inversify';
+import { injectable, inject } from 'tsyringe';
 
 export interface PartStats {
     result: string | number;
@@ -18,7 +18,7 @@ export class StatsService {
     private static readonly STORAGE_KEY = 'aoc.stats';
     private stats: Map<string, DayStats> = new Map();
 
-    constructor(private context: vscode.ExtensionContext) {
+    constructor(@inject('ExtensionContext') private context: vscode.ExtensionContext) {
         this.loadStats();
     }
 

@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "fs";
-import { injectable } from "inversify";
+import { injectable } from "tsyringe";
 import { StatsService } from "../services/stats.service";
 
 export class AocTreeItem extends vscode.TreeItem {
@@ -36,11 +36,15 @@ export class AocTreeItem extends vscode.TreeItem {
 export class AocTreeDataProvider implements vscode.TreeDataProvider<AocTreeItem> {
     private _onDidChangeTreeData = new vscode.EventEmitter<AocTreeItem | undefined | void>();
     readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
+    private workspaceRoot: string;
 
-    constructor(
-        private workspaceRoot: string,
-        private statsService?: StatsService
-    ) { }
+    constructor(private statsService: StatsService) {
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        if (!workspaceFolders) {
+            console.log('No workspace open. AoC extension is idle.');
+        }
+        this.workspaceRoot = workspaceFolders?.[0].uri.fsPath || '';
+    }
 
     get root(): string {
         return this.workspaceRoot;

@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { ICommand } from '../common/types';
 import { AocTreeDataProvider } from '../providers/aoc-tree-data-provider';
-import { injectable } from 'inversify';
+import { injectable } from 'tsyringe';
 
 @injectable()
 export class RefreshCommand implements ICommand {

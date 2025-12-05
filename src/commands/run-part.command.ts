@@ -6,7 +6,7 @@ import { exec } from 'child_process';
 import { ICommand } from '../common/types';
 import { AocTreeDataProvider } from '../providers/aoc-tree-data-provider';
 import { StatsService, PartStats } from '../services/stats.service';
-import { injectable, inject } from 'inversify';
+import { injectable } from 'tsyringe';
 import { createRunner } from '../helpers/create-runner';
 
 @injectable()
@@ -18,8 +18,8 @@ export class RunPartCommand implements ICommand {
     }
 
     constructor(
-        @inject(AocTreeDataProvider) private aocProvider: AocTreeDataProvider,
-        @inject(StatsService) private statsService: StatsService
+        private aocProvider: AocTreeDataProvider,
+        private statsService: StatsService
     ) {
         this.outputChannel = vscode.window.createOutputChannel('AoC Runner');
     }

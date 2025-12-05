@@ -1,11 +1,7 @@
-import 'reflect-metadata';
+import "reflect-metadata";
 
 import * as vscode from 'vscode';
-import { Container } from 'inversify';
-import { ServiceManager } from './common/service-manager';
-import { ServiceProvider } from './common/service-provider';
-import { ICommandManager, IServiceProvider, IServiceManager, ICommand } from './common/types';
-import { CommandManager } from './common/command-manager';
+import { container } from 'tsyringe';
 import { AocTreeDataProvider, AocTreeItem } from './providers/aoc-tree-data-provider';
 import { GenerateDayCommand } from './commands/generate-day.command';
 import { OpenDayCommand } from './commands/open-day.command';
@@ -22,70 +18,55 @@ import { SolutionCodeLensProvider } from './providers/solution-codelens-provider
 import { AocSessionService } from './services/aoc-session.service';
 import { AocApiService } from './services/aoc-api.service';
 import { StatsService } from './services/stats.service';
+import { ICommand } from './common/types';
+import { CommandManager } from './common/command-manager';
 
-export function initialize(context: vscode.ExtensionContext): IServiceProvider {
-    const container = new Container();
-	const serviceManager = new ServiceManager(container);
-	const serviceProvider = new ServiceProvider(container);
-
-	registerServices(context, serviceManager, serviceProvider);
-
-	addProviders(context, serviceProvider);
-
-	return serviceProvider;
+export function initialize(context: vscode.ExtensionContext): void {
+	registerServices(context);
+	addProviders(context);
 }
 
-function registerServices(context: vscode.ExtensionContext, serviceManager: IServiceManager, serviceProvider: IServiceProvider) {
-	serviceManager.addSingletonInstance<IServiceProvider>(IServiceProvider, serviceProvider);
-    serviceManager.addSingletonInstance<IServiceManager>(IServiceManager, serviceManager);
-    serviceManager.addSingleton<ICommandManager>(ICommandManager, CommandManager);
-    serviceManager.addSingletonFactory<AocSessionService>(AocSessionService, () => new AocSessionService(context));
-    serviceManager.addSingleton<AocApiService>(AocApiService, AocApiService);
-    serviceManager.addSingletonFactory<StatsService>(StatsService, () => new StatsService(context));
-	serviceManager.addSingleton<SolutionFileSystemProvider>(SolutionFileSystemProvider, SolutionFileSystemProvider);
-	serviceManager.addSingleton<SolutionCodeLensProvider>(SolutionCodeLensProvider, SolutionCodeLensProvider);
+function registerServices(context: vscode.ExtensionContext) {
+	// Register context as a value for injection
+	container.register('ExtensionContext', { useValue: context });
+	
+	// Register infrastructure
+	container.registerSingleton('CommandManager', CommandManager);
+	
+	// Register services
+	container.registerSingleton(AocSessionService);
+	container.registerSingleton(AocApiService);
+	container.registerSingleton(StatsService);
+	container.registerSingleton(SolutionFileSystemProvider);
+	container.registerSingleton(SolutionCodeLensProvider);
+	container.registerSingleton(AocTreeDataProvider);
 
-	// Register AocTreeDataProvider using factory pattern
-	serviceManager.addSingletonFactory<AocTreeDataProvider>(AocTreeDataProvider, (container) => {
-		const workspaceFolders = vscode.workspace.workspaceFolders;
-		if (!workspaceFolders) {
-			console.log('No workspace open. AoC extension is idle.');
-		}
-
-		const root = workspaceFolders?.[0].uri.fsPath || '';
-
-		// Get StatsService from container
-		const statsService = container.get<StatsService>(StatsService);
-
-		return new AocTreeDataProvider(root, statsService);
-	});
-
-    // Register commands
-    serviceManager.addSingleton<ICommand>(ICommand, GenerateDayCommand);
-    serviceManager.addSingleton<ICommand>(ICommand, OpenDayCommand);
-    serviceManager.addSingleton<ICommand>(ICommand, RunDayCommand);
-    serviceManager.addSingleton<ICommand>(ICommand, RefreshCommand);
-    serviceManager.addSingleton<ICommand>(ICommand, AddUtilityCommand);
-    serviceManager.addSingleton<ICommand>(ICommand, ConfigureSessionCommand);
-    serviceManager.addSingleton<ICommand>(ICommand, DownloadInputCommand);
-    serviceManager.addSingleton<ICommand>(ICommand, RunPartCommand);
-    serviceManager.addSingleton<ICommand>(ICommand, OpenInputCommand);
-    serviceManager.addSingleton<ICommand>(ICommand, DebugPartCommand);
+	// Register commands
+	container.register<ICommand>('ICommand', { useClass: GenerateDayCommand });
+	container.register<ICommand>('ICommand', { useClass: OpenDayCommand });
+	container.register<ICommand>('ICommand', { useClass: RunDayCommand });
+	container.register<ICommand>('ICommand', { useClass: RefreshCommand });
+	container.register<ICommand>('ICommand', { useClass: AddUtilityCommand });
+	container.register<ICommand>('ICommand', { useClass: ConfigureSessionCommand });
+	container.register<ICommand>('ICommand', { useClass: DownloadInputCommand });
+	container.register<ICommand>('ICommand', { useClass: RunPartCommand });
+	container.register<ICommand>('ICommand', { useClass: OpenInputCommand });
+	container.register<ICommand>('ICommand', { useClass: DebugPartCommand });
 }
 
-function addProviders(context: vscode.ExtensionContext, serviceProvider: IServiceProvider) {
-    const solutionProvider = serviceProvider.get<SolutionFileSystemProvider>(SolutionFileSystemProvider);
-    context.subscriptions.push(vscode.workspace.registerFileSystemProvider('aoc-solution', solutionProvider, { isCaseSensitive: true }));
+function addProviders(context: vscode.ExtensionContext) {
+	const solutionProvider = container.resolve(SolutionFileSystemProvider);
+	context.subscriptions.push(vscode.workspace.registerFileSystemProvider('aoc-solution', solutionProvider, { isCaseSensitive: true }));
 
-    const codeLensProvider = serviceProvider.get<SolutionCodeLensProvider>(SolutionCodeLensProvider);
-    context.subscriptions.push(vscode.languages.registerCodeLensProvider({ language: 'typescript', scheme: 'aoc-solution' }, codeLensProvider));
+	const codeLensProvider = container.resolve(SolutionCodeLensProvider);
+	context.subscriptions.push(vscode.languages.registerCodeLensProvider({ language: 'typescript', scheme: 'aoc-solution' }, codeLensProvider));
 
-    addTreeDataProvider(context, serviceProvider);
+	addTreeDataProvider(context);
 }
 
-function addTreeDataProvider(context: vscode.ExtensionContext, serviceProvider: IServiceProvider) {
+function addTreeDataProvider(context: vscode.ExtensionContext) {
 	// Get the provider instance and set up tree view
-	const aocProvider = serviceProvider.get<AocTreeDataProvider>(AocTreeDataProvider);
+	const aocProvider = container.resolve(AocTreeDataProvider);
 	const treeView = vscode.window.createTreeView('aocExplorer', {
 		treeDataProvider: aocProvider
 	});
@@ -126,3 +107,4 @@ function addTreeDataProvider(context: vscode.ExtensionContext, serviceProvider: 
 		})
 	);
 }
+

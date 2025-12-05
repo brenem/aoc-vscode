@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
-import { injectable } from 'inversify';
+import { injectable, inject } from 'tsyringe';
 
 @injectable()
 export class AocSessionService {
-    constructor(private context: vscode.ExtensionContext) {}
+    constructor(@inject('ExtensionContext') private context: vscode.ExtensionContext) {}
 
     async getSession(): Promise<string | undefined> {
         return await this.context.secrets.get('aoc.sessionToken');

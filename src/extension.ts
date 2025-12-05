@@ -1,12 +1,12 @@
+import "reflect-metadata";
 import * as vscode from 'vscode';
+import { container } from 'tsyringe';
 import { initialize } from './extension-init';
 import { ICommandManager } from './common/types';
 
 export function activate(context: vscode.ExtensionContext) {
-
-    const serviceProvider = initialize(context);
-    const commandManager = serviceProvider.get<ICommandManager>(ICommandManager);
-
+    initialize(context);
+    const commandManager = container.resolve<ICommandManager>('CommandManager');
     commandManager.registerCommands(context);
 }
 

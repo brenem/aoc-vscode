@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as ts from 'typescript';
 import { ICommand } from '../common/types';
 import { AocTreeDataProvider } from '../providers/aoc-tree-data-provider';
-import { injectable } from 'inversify';
+import { injectable } from 'tsyringe';
 import { createRunner } from '../helpers/create-runner';
 
 @injectable()

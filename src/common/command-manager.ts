@@ -1,11 +1,11 @@
 import * as vscode from 'vscode';
-import { injectable, multiInject } from 'inversify';
+import { injectable, injectAll } from 'tsyringe';
 import { ICommand } from './types/command';
 import { ICommandManager } from './types';
 
 @injectable()
 export class CommandManager implements ICommandManager {
-    constructor(@multiInject(ICommand) private commands: ICommand[]) {}
+    constructor(@injectAll('ICommand') private commands: ICommand[]) {}
 
     registerCommands(context: vscode.ExtensionContext) {
         for (const c of this.commands) {
@@ -17,4 +17,3 @@ export class CommandManager implements ICommandManager {
         }
     }
 }
-
