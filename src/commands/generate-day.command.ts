@@ -102,8 +102,13 @@ export function part2(input: string): number | string {
             fs.writeFileSync(inputPath, '', 'utf-8');
         }
 
+        const samplePath = path.join(dayDir, 'sample.txt');
+        if (!fs.existsSync(samplePath)) {
+            fs.writeFileSync(samplePath, '', 'utf-8');
+        }
+
         vscode.window.showInformationMessage(
-            `AoC dat created: ${year} ${dayDirName}`
+            `AoC day created: ${year} ${dayDirName}`
         );
 
         this.aocProvider.refresh();

@@ -15,14 +15,39 @@ export class SolutionCodeLensProvider implements vscode.CodeLensProvider {
         const text = document.getText();
         const lines = text.split('\n');
 
-        // Add "View Puzzle" at the top of the file
+        // Add file navigation and "View Puzzle" at the top of the file
         const { year, day } = this.parseUri(document.uri);
         if (year && day) {
+            // View Puzzle
             codeLenses.push(new vscode.CodeLens(new vscode.Range(0, 0, 0, 0), {
                 title: '📖 View Puzzle',
                 command: 'aoc.viewPuzzle',
                 arguments: [year, day]
             }));
+
+            // Get the real path to determine file locations
+            const query = new URLSearchParams(document.uri.query);
+            const realPath = query.get('realPath');
+            if (realPath) {
+                const dayDir = `day${day}`;
+                const dirPath = realPath.substring(0, realPath.lastIndexOf('/'));
+                const inputPath = `${dirPath}/input.txt`;
+                const samplePath = `${dirPath}/sample.txt`;
+
+                // Open Input
+                codeLenses.push(new vscode.CodeLens(new vscode.Range(0, 0, 0, 0), {
+                    title: '📥 Open Input',
+                    command: 'aoc.openInput',
+                    arguments: [year, dayDir, inputPath]
+                }));
+
+                // Open Sample
+                codeLenses.push(new vscode.CodeLens(new vscode.Range(0, 0, 0, 0), {
+                    title: '📄 Open Sample',
+                    command: 'aoc.openSample',
+                    arguments: [year, dayDir, samplePath]
+                }));
+            }
         }
 
         // Find part1 and part2 function declarations
@@ -34,17 +59,31 @@ export class SolutionCodeLensProvider implements vscode.CodeLensProvider {
             if (part1Match) {
                 const range = new vscode.Range(i, 0, i, line.length);
                 
-                // Run button
+                // Run with real input
                 codeLenses.push(new vscode.CodeLens(range, {
                     title: '▶ Run Part 1',
                     command: 'aoc.runPart',
                     arguments: [1]
                 }));
                 
-                // Debug button
+                // Run with sample input
+                codeLenses.push(new vscode.CodeLens(range, {
+                    title: '▶ Run Part 1 (Sample)',
+                    command: 'aoc.runPartWithSample',
+                    arguments: [1]
+                }));
+                
+                // Debug with real input
                 codeLenses.push(new vscode.CodeLens(range, {
                     title: '🐛 Debug Part 1',
                     command: 'aoc.debugPart',
+                    arguments: [1]
+                }));
+
+                // Debug with sample input
+                codeLenses.push(new vscode.CodeLens(range, {
+                    title: '🐛 Debug Part 1 (Sample)',
+                    command: 'aoc.debugPartWithSample',
                     arguments: [1]
                 }));
             }
@@ -52,17 +91,31 @@ export class SolutionCodeLensProvider implements vscode.CodeLensProvider {
             if (part2Match) {
                 const range = new vscode.Range(i, 0, i, line.length);
                 
-                // Run button
+                // Run with real input
                 codeLenses.push(new vscode.CodeLens(range, {
                     title: '▶ Run Part 2',
                     command: 'aoc.runPart',
                     arguments: [2]
                 }));
                 
-                // Debug button
+                // Run with sample input
+                codeLenses.push(new vscode.CodeLens(range, {
+                    title: '▶ Run Part 2 (Sample)',
+                    command: 'aoc.runPartWithSample',
+                    arguments: [2]
+                }));
+                
+                // Debug with real input
                 codeLenses.push(new vscode.CodeLens(range, {
                     title: '🐛 Debug Part 2',
                     command: 'aoc.debugPart',
+                    arguments: [2]
+                }));
+
+                // Debug with sample input
+                codeLenses.push(new vscode.CodeLens(range, {
+                    title: '🐛 Debug Part 2 (Sample)',
+                    command: 'aoc.debugPartWithSample',
                     arguments: [2]
                 }));
             }

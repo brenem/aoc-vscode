@@ -81,6 +81,23 @@
         "command": "aoc.viewPuzzle",
         "title": "AoC: View Puzzle",
         "icon": "$(book)"
+      },
+      {
+        "command": "aoc.runPartWithSample",
+        "title": "AoC: Run Part (Sample)"
+      },
+      {
+        "command": "aoc.debugPartWithSample",
+        "title": "AoC: Debug Part (Sample)"
+      },
+      {
+        "command": "aoc.openSample",
+        "title": "AoC: Open Sample Input"
+      },
+      {
+        "command": "aoc.upgradeDay",
+        "title": "AoC: Upgrade Day Files",
+        "icon": "$(sync)"
       }
     ],
     "configuration": {
@@ -121,6 +138,16 @@
           "command": "aoc.downloadInput",
           "when": "view == aocExplorer && viewItem == day",
           "group": "1_modification"
+        },
+        {
+          "command": "aoc.upgradeDay",
+          "when": "view == aocExplorer && viewItem == day",
+          "group": "2_upgrade"
+        },
+        {
+          "command": "aoc.upgradeDay",
+          "when": "view == aocExplorer && viewItem == year",
+          "group": "2_upgrade"
         }
       ]
     }

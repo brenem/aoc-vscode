@@ -225,11 +225,12 @@ export class AocTreeDataProvider implements vscode.TreeDataProvider<AocTreeItem>
             });
         }
 
-        // Handle day items - show solution.ts and input.txt
+        // Handle day items - show solution.ts, input.txt, and sample.txt
         if (element.contextValue === 'day' && element.year && element.dayDir) {
             const dayDir = path.join(this.workspaceRoot, 'solutions', element.year, element.dayDir);
             const solutionPath = path.join(dayDir, 'solution.ts');
             const inputPath = path.join(dayDir, 'input.txt');
+            const samplePath = path.join(dayDir, 'sample.txt');
 
             const files: AocTreeItem[] = [];
 
@@ -267,6 +268,24 @@ export class AocTreeDataProvider implements vscode.TreeDataProvider<AocTreeItem>
                     arguments: [element.year, element.dayDir, inputPath]
                 };
                 files.push(inputItem);
+            }
+
+            // Add sample.txt
+            if (fs.existsSync(samplePath)) {
+                const sampleItem = new AocTreeItem(
+                    'sample.txt',
+                    vscode.TreeItemCollapsibleState.None,
+                    'dayFile',
+                    element.year,
+                    element.dayDir,
+                    samplePath
+                );
+                sampleItem.command = {
+                    command: 'aoc.openSample',
+                    title: 'Open Sample',
+                    arguments: [element.year, element.dayDir, samplePath]
+                };
+                files.push(sampleItem);
             }
 
             return files;

@@ -6,15 +6,21 @@ export interface RunnerConfig {
     inputPath: string;
     part: 1 | 2;
     tempDir: string;
+    inputSource?: 'input' | 'sample'; // Optional: defaults to 'input'
 }
 
 export function createRunner(config: RunnerConfig): string {
-    const { solutionPath, inputPath, part, tempDir } = config;
+    const { solutionPath, inputPath, part, tempDir, inputSource = 'input' } = config;
+    
+    // Determine the actual input file to use
+    const actualInputPath = inputSource === 'sample'
+        ? inputPath.replace('input.txt', 'sample.txt')
+        : inputPath;
     
     // Read input
     let input = '';
-    if (fs.existsSync(inputPath)) {
-        input = fs.readFileSync(inputPath, 'utf-8');
+    if (fs.existsSync(actualInputPath)) {
+        input = fs.readFileSync(actualInputPath, 'utf-8');
     }
     
     // Escape backticks and dollar signs in input for template literal

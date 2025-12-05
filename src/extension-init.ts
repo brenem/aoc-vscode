@@ -14,6 +14,10 @@ import { RunPartCommand } from './commands/run-part.command';
 import { OpenInputCommand } from './commands/open-input.command';
 import { DebugPartCommand } from './commands/debug-part.command';
 import { ViewPuzzleCommand } from './commands/view-puzzle.command';
+import { RunPartWithSampleCommand } from './commands/run-part-with-sample.command';
+import { DebugPartWithSampleCommand } from './commands/debug-part-with-sample.command';
+import { OpenSampleCommand } from './commands/open-sample.command';
+import { UpgradeDayCommand } from './commands/upgrade-day.command';
 import { SolutionFileSystemProvider } from './providers/solution-file-system-provider';
 import { SolutionCodeLensProvider } from './providers/solution-codelens-provider';
 import { AocSessionService } from './services/aoc-session.service';
@@ -56,6 +60,10 @@ function registerServices(context: vscode.ExtensionContext) {
 	container.register<ICommand>(ICommand, { useClass: OpenInputCommand });
 	container.register<ICommand>(ICommand, { useClass: DebugPartCommand });
 	container.register<ICommand>(ICommand, { useClass: ViewPuzzleCommand });
+	container.register<ICommand>(ICommand, { useClass: RunPartWithSampleCommand });
+	container.register<ICommand>(ICommand, { useClass: DebugPartWithSampleCommand });
+	container.register<ICommand>(ICommand, { useClass: OpenSampleCommand });
+	container.register<ICommand>(ICommand, { useClass: UpgradeDayCommand });
 }
 
 function addProviders(context: vscode.ExtensionContext) {
