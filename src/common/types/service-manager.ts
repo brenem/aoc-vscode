@@ -1,4 +1,4 @@
-import { ServiceIdentifier, Factory, MetadataName } from 'inversify';
+import { ServiceIdentifier, Factory, MetadataName, Container } from 'inversify';
 import { ClassType, IDisposable } from './util';
 
 export const IServiceManager = Symbol('IServiceManager');
@@ -29,6 +29,12 @@ export interface IServiceManager extends IDisposable {
     //     factoryIdentifier: ServiceIdentifier<Factory<T>>,
     //     factoryMethod: FactoryCreator<T>
     // ): void;
+
+    addSingletonFactory<T>(
+        serviceIdentifier: ServiceIdentifier<T>,
+        factory: (context: Container) => T,
+        name?: MetadataName | undefined
+    ): void
 
     addBinding<T1, T2>(
         from: ServiceIdentifier<T1>,

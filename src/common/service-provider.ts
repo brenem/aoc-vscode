@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 import { Container, decorate, injectable, MetadataName, ServiceIdentifier } from 'inversify';
-import { IServiceContainer } from './types/service-container';
+import { IServiceProvider } from './types/service-provider';
 
 // This needs to be done once, hence placed in a common location.
 // Used by UnitTestSockerServer and also the extension unit tests.
@@ -16,7 +16,7 @@ try {
 }
 
 @injectable()
-export class ServiceContainer implements IServiceContainer {
+export class ServiceProvider implements IServiceProvider {
     constructor(private container: Container) {}
 
     public get<T>(

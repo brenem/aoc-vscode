@@ -5,7 +5,8 @@ import * as ts from 'typescript';
 import { exec } from 'child_process';
 import { ICommand } from '../common/types';
 import { AocTreeDataProvider } from '../providers/aoc-tree-data-provider';
-import { injectable } from 'inversify';
+import { StatsService, PartStats } from '../services/stats.service';
+import { injectable, inject } from 'inversify';
 import { createRunner } from '../helpers/create-runner';
 
 @injectable()
@@ -16,7 +17,10 @@ export class RunPartCommand implements ICommand {
         return 'aoc.runPart';
     }
 
-    constructor(private aocProvider: AocTreeDataProvider) {
+    constructor(
+        @inject(AocTreeDataProvider) private aocProvider: AocTreeDataProvider,
+        @inject(StatsService) private statsService: StatsService
+    ) {
         this.outputChannel = vscode.window.createOutputChannel('AoC Runner');
     }
 
@@ -105,7 +109,25 @@ export class RunPartCommand implements ICommand {
                 }
                 
                 if (stdout) {
-                    this.outputChannel.append(stdout);
+                    // Parse stats from output
+                    const statsMatch = stdout.match(/__STATS__(.+)/);
+                    if (statsMatch) {
+                        try {
+                            const stats: PartStats = JSON.parse(statsMatch[1]);
+                            this.statsService.savePartStats(year, dayNum, part as 1 | 2, stats);
+                            
+                            // Refresh tree view to show updated stats
+                            this.aocProvider.refresh();
+                        } catch (e) {
+                            // Ignore parsing errors
+                        }
+                        
+                        // Remove stats line from display output
+                        const displayOutput = stdout.replace(/__STATS__.+\n?/, '');
+                        this.outputChannel.append(displayOutput);
+                    } else {
+                        this.outputChannel.append(stdout);
+                    }
                 }
                 if (stderr) {
                     this.outputChannel.append(stderr);

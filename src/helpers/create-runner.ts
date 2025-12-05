@@ -34,12 +34,44 @@ console.log('Running Part ${part}');
 console.log('='.repeat(50));
 
 const startTime = Date.now();
-const result = part${part}(input);
+let result;
+let success = true;
+let error = null;
+
+try {
+    result = part${part}(input);
+} catch (e) {
+    success = false;
+    error = e instanceof Error ? e.message : String(e);
+}
+
 const elapsed = Date.now() - startTime;
 
-console.log('\\nResult:', result);
-console.log(\`Time: \${elapsed}ms\`);
-console.log('='.repeat(50));
+if (success) {
+    console.log('\\nResult:', result);
+    console.log(\`Time: \${elapsed}ms\`);
+    console.log('='.repeat(50));
+    
+    // Output stats for parsing (JSON on single line)
+    console.log('__STATS__' + JSON.stringify({
+        result: result,
+        executionTime: elapsed,
+        timestamp: Date.now(),
+        success: true
+    }));
+} else {
+    console.log('\\nError:', error);
+    console.log(\`Time: \${elapsed}ms\`);
+    console.log('='.repeat(50));
+    
+    // Output error stats
+    console.log('__STATS__' + JSON.stringify({
+        result: 'ERROR',
+        executionTime: elapsed,
+        timestamp: Date.now(),
+        success: false
+    }));
+}
 `;
 
     // Write runner to temp directory

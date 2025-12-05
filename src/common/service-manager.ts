@@ -75,6 +75,23 @@ export class ServiceManager implements IServiceManager {
         }
     }
 
+    addSingletonFactory<T>(
+        serviceIdentifier: ServiceIdentifier<T>,
+        factory: (context: Container) => T,
+        name?: MetadataName | undefined
+    ): void {
+        if (name) {
+            this.container.bind<T>(serviceIdentifier)
+                .toDynamicValue(() => factory(this.container))
+                .inSingletonScope()
+                .when(whenTargetNamedConstraint(name));
+        } else {
+            this.container.bind<T>(serviceIdentifier)
+                .toDynamicValue(() => factory(this.container))
+                .inSingletonScope();
+        }
+    }
+
     get<T>(serviceIdentifier: ServiceIdentifier<T>, name?: MetadataName | undefined): T {
         return name ? this.container.get<T>(serviceIdentifier, { name }) : this.container.get<T>(serviceIdentifier);
     }
