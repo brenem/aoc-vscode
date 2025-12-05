@@ -25,6 +25,13 @@ export class PuzzleService {
     }
 
     async getPuzzle(year: string, day: string): Promise<PuzzleContent | null> {
+        // Check if the puzzle is available yet
+        const availabilityMessage = this.checkPuzzleAvailability(year, day);
+        if (availabilityMessage) {
+            vscode.window.showWarningMessage(availabilityMessage);
+            return null;
+        }
+
         // Try cache first
         const cached = await this.loadFromCache(year, day);
         if (cached) {
@@ -106,6 +113,52 @@ export class PuzzleService {
 
     private getCacheFilePath(year: string, day: string): string {
         return path.join(this.puzzleCacheDir, year, `day${day.padStart(2, '0')}.html`);
+    }
+
+    private checkPuzzleAvailability(year: string, day: string): string | null {
+        const puzzleYear = parseInt(year);
+        const puzzleDay = parseInt(day);
+        
+        // Get current time in EST (Advent of Code timezone)
+        const now = new Date();
+        const estOffset = -5; // EST is UTC-5
+        const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+        const estTime = new Date(utc + (3600000 * estOffset));
+        
+        const currentYear = estTime.getFullYear();
+        const currentMonth = estTime.getMonth() + 1; // 0-indexed
+        const currentDay = estTime.getDate();
+        const currentHour = estTime.getHours();
+        
+        // Advent of Code runs December 1-25
+        // Puzzles unlock at midnight EST (00:00)
+        
+        // Check if year is in the future
+        if (puzzleYear > currentYear) {
+            return `🎄 Day ${puzzleDay} of ${puzzleYear} isn't available yet! Come back in December ${puzzleYear}.`;
+        }
+        
+        // Check if we're in the AoC season (December)
+        if (puzzleYear === currentYear && currentMonth < 12) {
+            return `🎄 Advent of Code ${puzzleYear} starts on December 1st! Day ${puzzleDay} will be available then.`;
+        }
+        
+        // Check if trying to access a day that hasn't unlocked yet
+        if (puzzleYear === currentYear && currentMonth === 12) {
+            // If it's December but before the day unlocks
+            if (puzzleDay > currentDay) {
+                const daysUntil = puzzleDay - currentDay;
+                return `🎄 Day ${puzzleDay} isn't available yet! It unlocks at midnight EST on December ${puzzleDay}${daysUntil === 1 ? ' (tomorrow)' : ` (in ${daysUntil} days)`}.`;
+            }
+            
+            // If it's the same day but before midnight EST
+            if (puzzleDay === currentDay && currentHour < 0) {
+                return `🎄 Day ${puzzleDay} isn't available yet! It unlocks at midnight EST (in a few hours).`;
+            }
+        }
+        
+        // Puzzle is available (or was available in a past year)
+        return null;
     }
 
     async clearCache(year?: string, day?: string): Promise<void> {

@@ -34,12 +34,15 @@ export class ViewPuzzleCommand implements ICommand {
             return;
         }
 
+        // Open the solution file FIRST so the webview has a reference column
+        await this.openSolutionFile(year, day);
+
         // Dispose of the previous panel if it exists
         if (this.currentPanel) {
             this.currentPanel.dispose();
         }
 
-        // Create WebView panel
+        // Create WebView panel beside the solution (now in column 1)
         const panel = vscode.window.createWebviewPanel(
             'aocPuzzle',
             `Day ${parseInt(day)}: ${puzzle.title}`,
@@ -71,9 +74,6 @@ export class ViewPuzzleCommand implements ICommand {
 
         // Set HTML content with state persistence script
         panel.webview.html = this.getWebviewContent(puzzle, year, day, state);
-
-        // Open the solution file
-        await this.openSolutionFile(year, day);
     }
 
     private async openSolutionFile(year: string, day: string): Promise<void> {

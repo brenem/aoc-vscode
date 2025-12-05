@@ -82,16 +82,20 @@ export class GenerateDayCommand implements ICommand {
 
         const solutionPath = path.join(dayDir, 'solution.ts');
         if (!fs.existsSync(solutionPath)) {
-            const template = `export function part1(input: string): number | string {
+            const template = `export async function part1(input: string): Promise<number | string | bigint> {
     return 0;
 }
 
-export function part2(input: string): number | string {
+export async function part2(input: string): Promise<number | string | bigint> {
     return 0;
 }
 
 // You can import shared utilities from '../../shared/utils'
 // Example: import { parseGrid } from '../../shared/utils/grid';
+
+// For very large numbers, use BigInt:
+// const bigNum = 123456789012345678901234567890n;
+// return bigNum;
 
 `;
             fs.writeFileSync(solutionPath, template, 'utf-8');

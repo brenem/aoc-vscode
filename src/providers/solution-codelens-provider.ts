@@ -53,8 +53,8 @@ export class SolutionCodeLensProvider implements vscode.CodeLensProvider {
         // Find part1 and part2 function declarations
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
-            const part1Match = line.match(/export\s+function\s+part1\s*\(/);
-            const part2Match = line.match(/export\s+function\s+part2\s*\(/);
+            const part1Match = line.match(/export\s+(async\s+)?function\s+part1\s*\(/);
+            const part2Match = line.match(/export\s+(async\s+)?function\s+part2\s*\(/);
 
             if (part1Match) {
                 const range = new vscode.Range(i, 0, i, line.length);

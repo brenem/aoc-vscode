@@ -29,55 +29,64 @@ export function createRunner(config: RunnerConfig): string {
         .replace(/`/g, '\\`')
         .replace(/\$/g, '\\$');
     
-    // Create runner script
+    // Create runner script with async support
     const runnerCode = `
 import { part${part} } from '${solutionPath.replace(/\\/g, '/')}';
 
 const input = \`${escapedInput}\`;
 
-console.log('='.repeat(50));
-console.log('Running Part ${part}');
-console.log('='.repeat(50));
-
-const startTime = Date.now();
-let result;
-let success = true;
-let error = null;
-
-try {
-    result = part${part}(input);
-} catch (e) {
-    success = false;
-    error = e instanceof Error ? e.message : String(e);
-}
-
-const elapsed = Date.now() - startTime;
-
-if (success) {
-    console.log('\\nResult:', result);
-    console.log(\`Time: \${elapsed}ms\`);
+(async () => {
     console.log('='.repeat(50));
-    
-    // Output stats for parsing (JSON on single line)
-    console.log('__STATS__' + JSON.stringify({
-        result: result,
-        executionTime: elapsed,
-        timestamp: Date.now(),
-        success: true
-    }));
-} else {
-    console.log('\\nError:', error);
-    console.log(\`Time: \${elapsed}ms\`);
+    console.log('Running Part ${part}');
     console.log('='.repeat(50));
-    
-    // Output error stats
-    console.log('__STATS__' + JSON.stringify({
-        result: 'ERROR',
-        executionTime: elapsed,
-        timestamp: Date.now(),
-        success: false
-    }));
-}
+
+    const startTime = Date.now();
+    let result;
+    let success = true;
+    let error = null;
+
+    try {
+        result = await part${part}(input);
+    } catch (e) {
+        success = false;
+        error = e instanceof Error ? e.message : String(e);
+    }
+
+    const elapsed = Date.now() - startTime;
+
+    if (success) {
+        // Convert BigInt to string for display
+        const displayResult = typeof result === 'bigint' ? result.toString() : result;
+        
+        console.log('\\nResult:', displayResult);
+        if (typeof result === 'bigint') {
+            console.log('(BigInt)');
+        }
+        console.log(\`Time: \${elapsed}ms\`);
+        console.log('='.repeat(50));
+        
+        // Output stats for parsing (JSON on single line)
+        // Convert BigInt to string for JSON serialization
+        console.log('__STATS__' + JSON.stringify({
+            result: displayResult,
+            executionTime: elapsed,
+            timestamp: Date.now(),
+            success: true
+        }));
+    } else {
+        console.log('\\nError:', error);
+        console.log(\`Time: \${elapsed}ms\`);
+        console.log('='.repeat(50));
+        
+        // Output error stats
+        console.log('__STATS__' + JSON.stringify({
+            result: 'ERROR',
+            executionTime: elapsed,
+            timestamp: Date.now(),
+            success: false
+        }));
+    }
+})();
 `;
 
     // Write runner to temp directory
