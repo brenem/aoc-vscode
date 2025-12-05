@@ -5,7 +5,7 @@ import { ICommandManager } from './types';
 
 @injectable()
 export class CommandManager implements ICommandManager {
-    constructor(@injectAll('ICommand') private commands: ICommand[]) {}
+    constructor(@injectAll(ICommand) private commands: ICommand[]) {}
 
     registerCommands(context: vscode.ExtensionContext) {
         for (const c of this.commands) {

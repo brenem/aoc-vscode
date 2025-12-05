@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { injectable, inject } from 'tsyringe';
+import { ExtensionContext } from '../common/types';
 
 export interface PartStats {
     result: string | number;
@@ -18,7 +19,7 @@ export class StatsService {
     private static readonly STORAGE_KEY = 'aoc.stats';
     private stats: Map<string, DayStats> = new Map();
 
-    constructor(@inject('ExtensionContext') private context: vscode.ExtensionContext) {
+    constructor(@inject(ExtensionContext) private context: vscode.ExtensionContext) {
         this.loadStats();
     }
 
@@ -29,13 +30,13 @@ export class StatsService {
     public savePartStats(year: string, day: string, part: 1 | 2, stats: PartStats): void {
         const key = this.getKey(year, day);
         let dayStats = this.stats.get(key) || {};
-        
+
         if (part === 1) {
             dayStats.part1 = stats;
         } else {
             dayStats.part2 = stats;
         }
-        
+
         this.stats.set(key, dayStats);
         this.persistStats();
     }

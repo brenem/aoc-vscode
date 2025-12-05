@@ -18,7 +18,7 @@ import { SolutionCodeLensProvider } from './providers/solution-codelens-provider
 import { AocSessionService } from './services/aoc-session.service';
 import { AocApiService } from './services/aoc-api.service';
 import { StatsService } from './services/stats.service';
-import { ICommand } from './common/types';
+import { ExtensionContext, ICommand, ICommandManager } from './common/types';
 import { CommandManager } from './common/command-manager';
 
 export function initialize(context: vscode.ExtensionContext): void {
@@ -28,11 +28,11 @@ export function initialize(context: vscode.ExtensionContext): void {
 
 function registerServices(context: vscode.ExtensionContext) {
 	// Register context as a value for injection
-	container.register('ExtensionContext', { useValue: context });
-	
+	container.register(ExtensionContext, { useValue: context });
+
 	// Register infrastructure
-	container.registerSingleton('CommandManager', CommandManager);
-	
+	container.registerSingleton(ICommandManager, CommandManager);
+
 	// Register services
 	container.registerSingleton(AocSessionService);
 	container.registerSingleton(AocApiService);
@@ -42,16 +42,16 @@ function registerServices(context: vscode.ExtensionContext) {
 	container.registerSingleton(AocTreeDataProvider);
 
 	// Register commands
-	container.register<ICommand>('ICommand', { useClass: GenerateDayCommand });
-	container.register<ICommand>('ICommand', { useClass: OpenDayCommand });
-	container.register<ICommand>('ICommand', { useClass: RunDayCommand });
-	container.register<ICommand>('ICommand', { useClass: RefreshCommand });
-	container.register<ICommand>('ICommand', { useClass: AddUtilityCommand });
-	container.register<ICommand>('ICommand', { useClass: ConfigureSessionCommand });
-	container.register<ICommand>('ICommand', { useClass: DownloadInputCommand });
-	container.register<ICommand>('ICommand', { useClass: RunPartCommand });
-	container.register<ICommand>('ICommand', { useClass: OpenInputCommand });
-	container.register<ICommand>('ICommand', { useClass: DebugPartCommand });
+	container.register<ICommand>(ICommand, { useClass: GenerateDayCommand });
+	container.register<ICommand>(ICommand, { useClass: OpenDayCommand });
+	container.register<ICommand>(ICommand, { useClass: RunDayCommand });
+	container.register<ICommand>(ICommand, { useClass: RefreshCommand });
+	container.register<ICommand>(ICommand, { useClass: AddUtilityCommand });
+	container.register<ICommand>(ICommand, { useClass: ConfigureSessionCommand });
+	container.register<ICommand>(ICommand, { useClass: DownloadInputCommand });
+	container.register<ICommand>(ICommand, { useClass: RunPartCommand });
+	container.register<ICommand>(ICommand, { useClass: OpenInputCommand });
+	container.register<ICommand>(ICommand, { useClass: DebugPartCommand });
 }
 
 function addProviders(context: vscode.ExtensionContext) {
