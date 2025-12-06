@@ -30,6 +30,8 @@ import { SolutionDiagnosticsService } from './services/solution-diagnostics.serv
 import { ExtensionContext, ICommand, ICommandManager } from './common/types';
 import { CommandManager } from './common/command-manager';
 import { CheckSolutionCommand } from './commands/check-solution.command';
+import { SubmitSolutionCommand } from './commands/submit-solution.command';
+import { SubmissionService } from './services/submission.service';
 
 export function initialize(context: vscode.ExtensionContext): void {
 	registerServices(context);
@@ -71,9 +73,15 @@ function registerServices(context: vscode.ExtensionContext) {
 	container.register<ICommand>(ICommand, { useClass: OpenSampleCommand });
 	container.register<ICommand>(ICommand, { useClass: UpgradeDayCommand });
 	container.register<ICommand>(ICommand, { useClass: CheckSolutionCommand });
+	container.register<ICommand>(ICommand, { useClass: SubmitSolutionCommand });
 }
 
 function addProviders(context: vscode.ExtensionContext) {
+	// Initialize submission service (for status bar)
+	container.registerSingleton(SubmissionService);
+	const submissionService = container.resolve(SubmissionService);
+	// It starts timer automatically in constructor
+	
 	const solutionProvider = container.resolve(SolutionFileSystemProvider);
 	context.subscriptions.push(vscode.workspace.registerFileSystemProvider('aoc-solution', solutionProvider, { isCaseSensitive: true }));
 

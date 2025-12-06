@@ -103,6 +103,11 @@
         "command": "aoc.checkSolution",
         "title": "AoC: Check Solution",
         "icon": "$(check)"
+      },
+      {
+        "command": "aoc.submitSolution",
+        "title": "AoC: Submit Solution",
+        "icon": "$(rocket)"
       }
     ],
     "configuration": {
