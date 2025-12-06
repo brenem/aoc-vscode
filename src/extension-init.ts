@@ -26,8 +26,10 @@ import { StatsService } from './services/stats.service';
 import { PuzzleService } from './services/puzzle.service';
 import { TreeViewService } from './services/tree-view.service';
 import { PuzzleWebviewSerializer } from './services/puzzle-webview-serializer';
+import { SolutionDiagnosticsService } from './services/solution-diagnostics.service';
 import { ExtensionContext, ICommand, ICommandManager } from './common/types';
 import { CommandManager } from './common/command-manager';
+import { CheckSolutionCommand } from './commands/check-solution.command';
 
 export function initialize(context: vscode.ExtensionContext): void {
 	registerServices(context);
@@ -50,6 +52,7 @@ function registerServices(context: vscode.ExtensionContext) {
 	container.registerSingleton(SolutionFileSystemProvider);
 	container.registerSingleton(SolutionCodeLensProvider);
 	container.registerSingleton(AocTreeDataProvider);
+	container.registerSingleton(SolutionDiagnosticsService);
 
 	// Register commands
 	container.register<ICommand>(ICommand, { useClass: GenerateDayCommand });
@@ -67,6 +70,7 @@ function registerServices(context: vscode.ExtensionContext) {
 	container.register<ICommand>(ICommand, { useClass: DebugPartWithSampleCommand });
 	container.register<ICommand>(ICommand, { useClass: OpenSampleCommand });
 	container.register<ICommand>(ICommand, { useClass: UpgradeDayCommand });
+	container.register<ICommand>(ICommand, { useClass: CheckSolutionCommand });
 }
 
 function addProviders(context: vscode.ExtensionContext) {
@@ -75,6 +79,9 @@ function addProviders(context: vscode.ExtensionContext) {
 
 	const codeLensProvider = container.resolve(SolutionCodeLensProvider);
 	context.subscriptions.push(vscode.languages.registerCodeLensProvider({ language: 'typescript', scheme: 'aoc-solution' }, codeLensProvider));
+	
+	const diagnosticsService = container.resolve(SolutionDiagnosticsService);
+	diagnosticsService.initialize(context);
 
 	// Register puzzle webview serializer
 	const puzzleSerializer = container.resolve(PuzzleWebviewSerializer);

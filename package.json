@@ -98,6 +98,11 @@
         "command": "aoc.upgradeDay",
         "title": "AoC: Upgrade Day Files",
         "icon": "$(sync)"
+      },
+      {
+        "command": "aoc.checkSolution",
+        "title": "AoC: Check Solution",
+        "icon": "$(check)"
       }
     ],
     "configuration": {
