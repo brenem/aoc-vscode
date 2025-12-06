@@ -108,6 +108,11 @@
         "command": "aoc.submitSolution",
         "title": "AoC: Submit Solution",
         "icon": "$(rocket)"
+      },
+      {
+        "command": "aoc.refreshPuzzle",
+        "title": "AoC: Refresh Puzzle",
+        "icon": "$(refresh)"
       }
     ],
     "configuration": {
