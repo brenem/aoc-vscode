@@ -118,6 +118,10 @@
         "command": "aoc.markPartSolved",
         "title": "AoC: Mark Part as Solved",
         "icon": "$(check)"
+      },
+      {
+        "command": "aoc.debugStats",
+        "title": "AoC: Debug Stats"
       }
     ],
     "configuration": {

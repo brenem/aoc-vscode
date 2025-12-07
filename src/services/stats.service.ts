@@ -25,7 +25,9 @@ export class StatsService {
     }
 
     private getKey(year: string, day: string): string {
-        return `${year}-${day}`;
+        // Normalize day to always use zero-padding (e.g., "2" -> "02")
+        const paddedDay = day.padStart(2, '0');
+        return `${year}-${paddedDay}`;
     }
 
     public savePartStats(year: string, day: string, part: 1 | 2, stats: PartStats): void {
@@ -92,7 +94,44 @@ export class StatsService {
     private loadStats(): void {
         const stored = this.context.workspaceState.get<Record<string, DayStats>>(StatsService.STORAGE_KEY);
         if (stored) {
-            this.stats = new Map(Object.entries(stored));
+            // Migrate old keys to new normalized format
+            const migratedEntries = new Map<string, DayStats>();
+            
+            for (const [key, value] of Object.entries(stored)) {
+                // Parse the key (format: "year-day")
+                const parts = key.split('-');
+                if (parts.length === 2) {
+                    const year = parts[0];
+                    const day = parts[1];
+                    // Use getKey to normalize the format
+                    const normalizedKey = this.getKey(year, day);
+                    
+                    // If we already have data for this normalized key, merge them
+                    const existing = migratedEntries.get(normalizedKey);
+                    if (existing) {
+                        // Merge properties within each PartStats object
+                        migratedEntries.set(normalizedKey, {
+                            part1: existing.part1 || value.part1 ? {
+                                ...(existing.part1 || {}),
+                                ...(value.part1 || {})
+                            } as PartStats : undefined,
+                            part2: existing.part2 || value.part2 ? {
+                                ...(existing.part2 || {}),
+                                ...(value.part2 || {})
+                            } as PartStats : undefined
+                        });
+                    } else {
+                        migratedEntries.set(normalizedKey, value);
+                    }
+                } else {
+                    // Invalid key format, skip
+                    continue;
+                }
+            }
+            
+            this.stats = migratedEntries;
+            // Persist the migrated data
+            this.persistStats();
         }
     }
 
