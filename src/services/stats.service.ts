@@ -34,10 +34,19 @@ export class StatsService {
         const key = this.getKey(year, day);
         let dayStats = this.stats.get(key) || {};
 
+        // Get existing stats for this part to preserve the solved flag
+        const existingStats = part === 1 ? dayStats.part1 : dayStats.part2;
+        
+        // Merge new stats with existing, preserving the solved flag if it exists
+        const mergedStats: PartStats = {
+            ...stats,
+            solved: stats.solved !== undefined ? stats.solved : (existingStats?.solved || false)
+        };
+
         if (part === 1) {
-            dayStats.part1 = stats;
+            dayStats.part1 = mergedStats;
         } else {
-            dayStats.part2 = stats;
+            dayStats.part2 = mergedStats;
         }
 
         this.stats.set(key, dayStats);
