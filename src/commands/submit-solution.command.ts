@@ -92,8 +92,14 @@ export class SubmitSolutionCommand implements ICommand {
                 
                 switch (result.status) {
                     case 'CORRECT':
-                        // Mark part as solved
-                        this.statsService.markPartSolved(year, day, part);
+                        // Save the submitted answer to stats
+                        this.statsService.savePartStats(year, day, part, {
+                            result: answer.trim(),
+                            executionTime: 0, // Submission doesn't track execution time
+                            timestamp: Date.now(),
+                            success: true,
+                            solved: true
+                        });
                         vscode.window.showInformationMessage(`🎉 Correct! ${result.message}`);
                         // Refresh the puzzle view if open
                         await this.puzzleService.refreshPuzzle(year, day);
