@@ -32,6 +32,7 @@ import { CommandManager } from './common/command-manager';
 import { CheckSolutionCommand } from './commands/check-solution.command';
 import { SubmitSolutionCommand } from './commands/submit-solution.command';
 import { RefreshPuzzleCommand } from './commands/refresh-puzzle.command';
+import { MarkPartSolvedCommand } from './commands/mark-part-solved.command';
 import { SubmissionService } from './services/submission.service';
 
 export function initialize(context: vscode.ExtensionContext): void {
@@ -76,6 +77,7 @@ function registerServices(context: vscode.ExtensionContext) {
 	container.register<ICommand>(ICommand, { useClass: CheckSolutionCommand });
 	container.register<ICommand>(ICommand, { useClass: SubmitSolutionCommand });
 	container.register<ICommand>(ICommand, { useClass: RefreshPuzzleCommand });
+	container.register<ICommand>(ICommand, { useClass: MarkPartSolvedCommand });
 }
 
 function addProviders(context: vscode.ExtensionContext) {

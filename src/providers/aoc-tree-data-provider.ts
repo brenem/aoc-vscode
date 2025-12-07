@@ -164,6 +164,16 @@ export class AocTreeDataProvider implements vscode.TreeDataProvider<AocTreeItem>
                 const dayNum = dayDirName.replace(/^day/, '').padStart(2, '0');
                 let label = `Day ${dayNum}`;
 
+                // Add star indicators for solved parts
+                const part1Solved = this.statsService.isPartSolved(element.year!, dayNum, 1);
+                const part2Solved = this.statsService.isPartSolved(element.year!, dayNum, 2);
+                
+                if (part1Solved && part2Solved) {
+                    label += ' ⭐⭐';
+                } else if (part1Solved) {
+                    label += ' ⭐';
+                }
+
                 // Add stats if available
                 if (this.statsService) {
                     const dayStats = this.statsService.getDayStats(element.year!, dayNum);
@@ -192,22 +202,28 @@ export class AocTreeDataProvider implements vscode.TreeDataProvider<AocTreeItem>
                 // Add tooltip with more details
                 if (this.statsService) {
                     const dayStats = this.statsService.getDayStats(element.year!, dayNum);
-                    if (dayStats) {
+                    
+                    if (dayStats || part1Solved || part2Solved) {
                         const tooltip = new vscode.MarkdownString();
                         tooltip.appendMarkdown(`**Day ${dayNum} Stats**\n\n`);
                         
-                        if (dayStats.part1) {
-                            tooltip.appendMarkdown(`**Part 1**\n`);
-                            tooltip.appendMarkdown(`- Time: ${dayStats.part1.executionTime}ms\n`);
-                            tooltip.appendMarkdown(`- Result: ${dayStats.part1.result}\n`);
-                            tooltip.appendMarkdown(`- Status: ${dayStats.part1.success ? '✅ Success' : '❌ Error'}\n\n`);
+                        if (dayStats?.part1 || part1Solved) {
+                            tooltip.appendMarkdown(`**Part 1** ${part1Solved ? '⭐ Solved' : ''}\n`);
+                            if (dayStats?.part1) {
+                                tooltip.appendMarkdown(`- Time: ${dayStats.part1.executionTime}ms\n`);
+                                tooltip.appendMarkdown(`- Result: ${dayStats.part1.result}\n`);
+                                tooltip.appendMarkdown(`- Status: ${dayStats.part1.success ? '✅ Success' : '❌ Error'}\n`);
+                            }
+                            tooltip.appendMarkdown('\n');
                         }
                         
-                        if (dayStats.part2) {
-                            tooltip.appendMarkdown(`**Part 2**\n`);
-                            tooltip.appendMarkdown(`- Time: ${dayStats.part2.executionTime}ms\n`);
-                            tooltip.appendMarkdown(`- Result: ${dayStats.part2.result}\n`);
-                            tooltip.appendMarkdown(`- Status: ${dayStats.part2.success ? '✅ Success' : '❌ Error'}\n`);
+                        if (dayStats?.part2 || part2Solved) {
+                            tooltip.appendMarkdown(`**Part 2** ${part2Solved ? '⭐ Solved' : ''}\n`);
+                            if (dayStats?.part2) {
+                                tooltip.appendMarkdown(`- Time: ${dayStats.part2.executionTime}ms\n`);
+                                tooltip.appendMarkdown(`- Result: ${dayStats.part2.result}\n`);
+                                tooltip.appendMarkdown(`- Status: ${dayStats.part2.success ? '✅ Success' : '❌ Error'}\n`);
+                            }
                         }
                         
                         item.tooltip = tooltip;

@@ -113,6 +113,11 @@
         "command": "aoc.refreshPuzzle",
         "title": "AoC: Refresh Puzzle",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "aoc.markPartSolved",
+        "title": "AoC: Mark Part as Solved",
+        "icon": "$(check)"
       }
     ],
     "configuration": {

@@ -5,6 +5,7 @@ import { SubmissionService } from '../services/submission.service';
 import { AocSessionService } from '../services/aoc-session.service';
 import { StatsService } from '../services/stats.service';
 import { PuzzleService } from '../services/puzzle.service';
+import { AocTreeDataProvider } from '../providers/aoc-tree-data-provider';
 
 @injectable()
 export class SubmitSolutionCommand implements ICommand {
@@ -16,7 +17,8 @@ export class SubmitSolutionCommand implements ICommand {
         private submissionService: SubmissionService,
         private statsService: StatsService,
         private sessionService: AocSessionService,
-        private puzzleService: PuzzleService
+        private puzzleService: PuzzleService,
+        private aocProvider: AocTreeDataProvider
     ) {}
 
     public async execute(context: vscode.ExtensionContext, ...args: any[]): Promise<void> {
@@ -90,9 +92,13 @@ export class SubmitSolutionCommand implements ICommand {
                 
                 switch (result.status) {
                     case 'CORRECT':
+                        // Mark part as solved
+                        this.statsService.markPartSolved(year, day, part);
                         vscode.window.showInformationMessage(`🎉 Correct! ${result.message}`);
                         // Refresh the puzzle view if open
                         await this.puzzleService.refreshPuzzle(year, day);
+                        // Refresh tree view to show solved status
+                        this.aocProvider.refresh();
                         break;
                     case 'INCORRECT':
                         vscode.window.showErrorMessage(`❌ Incorrect. ${result.message}`);
