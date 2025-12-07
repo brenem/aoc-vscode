@@ -1,9 +1,14 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
+import { injectable, inject } from 'tsyringe';
+import { BreakpointSyncService } from '../services/breakpoint-sync.service';
 
+@injectable()
 export class SolutionFileSystemProvider implements vscode.FileSystemProvider {
     private _onDidChangeFile = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
     readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._onDidChangeFile.event;
+
+    constructor(private breakpointSyncService: BreakpointSyncService) {}
 
     watch(uri: vscode.Uri, options: { recursive: boolean; excludes: string[]; }): vscode.Disposable {
         const realPath = this.getRealPath(uri);
@@ -31,6 +36,8 @@ export class SolutionFileSystemProvider implements vscode.FileSystemProvider {
 
     readFile(uri: vscode.Uri): Uint8Array {
         const realPath = this.getRealPath(uri);
+        // Register the mapping for breakpoint synchronization
+        this.breakpointSyncService.registerFileMapping(uri, realPath);
         return fs.readFileSync(realPath);
     }
 

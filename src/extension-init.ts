@@ -35,6 +35,7 @@ import { RefreshPuzzleCommand } from './commands/refresh-puzzle.command';
 import { MarkPartSolvedCommand } from './commands/mark-part-solved.command';
 import { DebugStatsCommand } from './commands/debug-stats.command';
 import { SubmissionService } from './services/submission.service';
+import { BreakpointSyncService } from './services/breakpoint-sync.service';
 
 export function initialize(context: vscode.ExtensionContext): void {
 	registerServices(context);
@@ -58,6 +59,8 @@ function registerServices(context: vscode.ExtensionContext) {
 	container.registerSingleton(SolutionCodeLensProvider);
 	container.registerSingleton(AocTreeDataProvider);
 	container.registerSingleton(SolutionDiagnosticsService);
+	container.registerSingleton(SubmissionService);
+	container.registerSingleton(BreakpointSyncService);
 
 	// Register commands
 	container.register<ICommand>(ICommand, { useClass: GenerateDayCommand });
@@ -83,10 +86,9 @@ function registerServices(context: vscode.ExtensionContext) {
 }
 
 function addProviders(context: vscode.ExtensionContext) {
-	// Initialize submission service (for status bar)
-	container.registerSingleton(SubmissionService);
-	const submissionService = container.resolve(SubmissionService);
-	// It starts timer automatically in constructor
+	// Initialize breakpoint sync service
+	const breakpointSyncService = container.resolve(BreakpointSyncService);
+	breakpointSyncService.initialize(context);
 	
 	const solutionProvider = container.resolve(SolutionFileSystemProvider);
 	context.subscriptions.push(vscode.workspace.registerFileSystemProvider('aoc-solution', solutionProvider, { isCaseSensitive: true }));
