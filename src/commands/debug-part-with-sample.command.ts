@@ -117,6 +117,45 @@ export class DebugPartWithSampleCommand implements ICommand {
             const runnerJsPath = runnerPath.replace('.ts', '.js');
             fs.writeFileSync(runnerJsPath, result.outputText, 'utf-8');
 
+            // Synchronize breakpoints from virtual file to real file
+            // Get all breakpoints set on the virtual file
+            const virtualUri = active.document.uri;
+            const realUri = vscode.Uri.file(solutionPath);
+            
+            const virtualBreakpoints = vscode.debug.breakpoints.filter(
+                bp => bp instanceof vscode.SourceBreakpoint && bp.location.uri.toString() === virtualUri.toString()
+            ) as vscode.SourceBreakpoint[];
+
+            // Remove existing breakpoints on the real file to avoid duplicates
+            const realBreakpoints = vscode.debug.breakpoints.filter(
+                bp => bp instanceof vscode.SourceBreakpoint && bp.location.uri.toString() === realUri.toString()
+            );
+            if (realBreakpoints.length > 0) {
+                vscode.debug.removeBreakpoints(realBreakpoints);
+            }
+
+            // Add breakpoints to the real file at the same line numbers
+            if (virtualBreakpoints.length > 0) {
+                const newBreakpoints = virtualBreakpoints.map(bp => {
+                    return new vscode.SourceBreakpoint(
+                        new vscode.Location(realUri, bp.location.range),
+                        bp.enabled,
+                        bp.condition,
+                        bp.hitCondition,
+                        bp.logMessage
+                    );
+                });
+                vscode.debug.addBreakpoints(newBreakpoints);
+                
+                // Restore focus to the virtual file to prevent it from being closed
+                // when VS Code opens the real file to show breakpoints
+                await vscode.window.showTextDocument(active.document, {
+                    viewColumn: active.viewColumn,
+                    preserveFocus: false,
+                    preview: false
+                });
+            }
+
             // Create debug configuration with source map path overrides
             // This maps the real file path to the virtual URI
             const debugConfig: vscode.DebugConfiguration = {
