@@ -100,35 +100,74 @@ function addTreeDataProvider(context: vscode.ExtensionContext) {
 	context.subscriptions.push(treeView);
 
 	// Sync tree view selection with active editor
+	const syncTreeViewSelection = () => {
+		// Only reveal if the tree view is visible to avoid stealing focus/expanding unnecessarily
+		if (!treeView.visible) {
+			return;
+		}
+
+		const editor = vscode.window.activeTextEditor;
+		if (!editor) {
+			return;
+		}
+
+		const filePath = editor.document.uri.fsPath;
+
+		// Match .../solutions/YYYY/dayXX/(solution.ts|input.txt|sample.txt)
+		const dayMatch = filePath.match(/solutions[\\\/](\d{4})[\\\/](day\d{2})[\\\/](solution\.ts|input\.txt|sample\.txt)$/);
+
+		if (dayMatch) {
+			const [_, year, dayDir, fileName] = dayMatch;
+
+			// Find the corresponding tree item
+			const fileItem = new AocTreeItem(
+				fileName,
+				vscode.TreeItemCollapsibleState.None,
+				'dayFile',
+				year,
+				dayDir,
+				filePath
+			);
+
+			// Reveal: select but do not take focus from editor
+			treeView.reveal(fileItem, { select: true, focus: false });
+			return;
+		}
+
+		// Match .../solutions/shared/utils/xxx.ts
+		const utilsMatch = filePath.match(/solutions[\\\/]shared[\\\/]utils[\\\/]([^\\\/]+\.ts)$/);
+		if (utilsMatch) {
+			const [_, fileName] = utilsMatch;
+
+			const fileItem = new AocTreeItem(
+				fileName,
+				vscode.TreeItemCollapsibleState.None,
+				'utilityFile',
+				undefined,
+				undefined,
+				filePath
+			);
+
+			treeView.reveal(fileItem, { select: true, focus: false });
+		}
+	};
+
+	// 1. Sync on active text editor change
 	context.subscriptions.push(
-		vscode.window.onDidChangeActiveTextEditor(editor => {
-			if (editor) {
-				const filePath = editor.document.uri.fsPath;
-				if (filePath && filePath.includes('solution.ts')) {
-					// Parse year and day from file path: .../solutions/YYYY/dayXX/solution.ts
-					const segments = filePath.split('/').filter(Boolean);
-					const solutionsIndex = segments.lastIndexOf('solutions');
-					if (solutionsIndex !== -1 && solutionsIndex + 2 < segments.length) {
-						const year = segments[solutionsIndex + 1];
-						const dayDir = segments[solutionsIndex + 2];
-						const fileName = 'solution.ts';
+		vscode.window.onDidChangeActiveTextEditor(syncTreeViewSelection)
+	);
 
-						// Find the corresponding tree item (the file, not the day)
-						const fileItem = new AocTreeItem(
-							fileName,
-							vscode.TreeItemCollapsibleState.None,
-							'dayFile',
-							year,
-							dayDir,
-							filePath
-						);
-
-						// Reveal the item in the tree view
-						treeView.reveal(fileItem, { select: true, focus: false });
-					}
-				}
+	// 2. Sync when the tree view itself becomes visible
+	context.subscriptions.push(
+		treeView.onDidChangeVisibility(e => {
+			if (e.visible) {
+				syncTreeViewSelection();
 			}
 		})
 	);
+
+	// 3. Sync immediately on startup if we have an active editor
+	// Use a small timeout to let the tree view initialize fully
+	setTimeout(syncTreeViewSelection, 500);
 }
 
