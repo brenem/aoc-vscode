@@ -29,9 +29,11 @@ export function createRunner(config: RunnerConfig): string {
         .replace(/`/g, '\\`')
         .replace(/\$/g, '\\$');
     
-    // Create runner script with async support
-    const runnerCode = `
-import { part${part} } from '${solutionPath.replace(/\\/g, '/')}';
+// Use absolute path for import (remove .ts extension for import)
+const importPath = solutionPath.replace(/\.ts$/, '').replace(/\\/g, '/');
+
+const runnerCode = `
+import { part${part} } from '${importPath}';
 
 const input = \`${escapedInput}\`;
 

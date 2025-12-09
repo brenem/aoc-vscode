@@ -70,73 +70,36 @@ export class DebugPartWithSampleCommand implements ICommand {
                 fs.mkdirSync(context.globalStorageUri.fsPath, { recursive: true });
             }
 
-            // First, compile the solution.ts to .js with source maps
-            const solutionDir = path.dirname(solutionPath);
-            const solutionFileName = path.basename(solutionPath, '.ts');
-            const compiledSolutionPath = path.join(solutionDir, `${solutionFileName}.js`);
-            const sourceMapPath = path.join(solutionDir, `${solutionFileName}.js.map`);
-
-            const solutionCode = fs.readFileSync(solutionPath, 'utf-8');
-            const solutionResult = ts.transpileModule(solutionCode, {
-                compilerOptions: {
-                    module: ts.ModuleKind.CommonJS,
-                    target: ts.ScriptTarget.ES2020,
-                    esModuleInterop: true,
-                    skipLibCheck: true,
-                    sourceMap: true
-                },
-                fileName: solutionPath
-            });
-
-            // Write compiled solution and source map
-            fs.writeFileSync(compiledSolutionPath, solutionResult.outputText, 'utf-8');
-            if (solutionResult.sourceMapText) {
-                fs.writeFileSync(sourceMapPath, solutionResult.sourceMapText, 'utf-8');
-            }
-
-            // Create runner script that imports from the compiled .js file
+            // Create runner script (TypeScript) for solution.ts
+            // createRunner now handles the import path adjustment
             const runnerPath = createRunner({
-                solutionPath: compiledSolutionPath, // Use compiled .js instead of .ts
+                solutionPath: solutionPath, 
                 inputPath,
                 part: part as 1 | 2,
                 tempDir: context.globalStorageUri.fsPath,
                 inputSource: 'sample'
             });
 
-            // Compile runner TypeScript to JavaScript
-            const runnerCode = fs.readFileSync(runnerPath, 'utf-8');
-            const result = ts.transpileModule(runnerCode, {
-                compilerOptions: {
-                    module: ts.ModuleKind.CommonJS,
-                    target: ts.ScriptTarget.ES2020,
-                    esModuleInterop: true,
-                    skipLibCheck: true
-                }
-            });
+            // Locate ts-node/register within the extension
+            const tsNodeRegisterPath = path.join(context.extensionPath, 'node_modules', 'ts-node', 'register', 'index.js');
 
-            // Write compiled JavaScript
-            const runnerJsPath = runnerPath.replace('.ts', '.js');
-            fs.writeFileSync(runnerJsPath, result.outputText, 'utf-8');
-
-            // No need for breakpoint synchronization with real files
-
-            // Create debug configuration with source map path overrides
-            // This maps the real file path to the virtual URI
+            // Create debug configuration using node and ts-node register
             const debugConfig: vscode.DebugConfiguration = {
                 type: 'node',
                 request: 'launch',
                 name: `Debug Part ${part} (Sample)`,
-                program: runnerJsPath,
+                program: runnerPath,
                 cwd: root,
+                runtimeArgs: [
+                    '-r',
+                    tsNodeRegisterPath
+                ],
+                env: {
+                    'TS_NODE_COMPILER_OPTIONS': '{"module":"commonjs"}'
+                },
                 console: 'integratedTerminal',
                 internalConsoleOptions: 'neverOpen',
                 skipFiles: ['<node_internals>/**'],
-                sourceMaps: true,
-                outFiles: [
-                    `${solutionDir}/**/*.js`,
-                    `${context.globalStorageUri.fsPath}/**/*.js`
-                ],
-                // No need for source map path overrides with real files
             };
 
             // Start debugging
