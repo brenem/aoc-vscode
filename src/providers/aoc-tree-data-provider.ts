@@ -263,7 +263,7 @@ export class AocTreeDataProvider implements vscode.TreeDataProvider<AocTreeItem>
                 solutionItem.command = {
                     command: 'aoc.openDay',
                     title: 'Open Solution',
-                    arguments: [element] // Pass the parent day item
+                    arguments: [{ year: element.year, dayDir: element.dayDir }] // Pass only necessary data to avoid circular JSON
                 };
                 files.push(solutionItem);
             }

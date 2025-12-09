@@ -47,6 +47,10 @@ function registerServices(context: vscode.ExtensionContext) {
 	// Register infrastructure
 	container.registerSingleton(ICommandManager, CommandManager);
 	container.register<ICommand>(ICommand, { useClass: AddUtilityCommand });
+	container.register<ICommand>(ICommand, { useClass: GenerateDayCommand });
+	container.register<ICommand>(ICommand, { useClass: OpenDayCommand });
+	container.register<ICommand>(ICommand, { useClass: RunDayCommand });
+	container.register<ICommand>(ICommand, { useClass: RefreshCommand });
 	container.register<ICommand>(ICommand, { useClass: ConfigureSessionCommand });
 	container.register<ICommand>(ICommand, { useClass: DownloadInputCommand });
 	container.register<ICommand>(ICommand, { useClass: RunPartCommand });

@@ -16,7 +16,7 @@ export class OpenDayCommand implements ICommand {
 
     public async execute(context: vscode.ExtensionContext, ...args: any[]): Promise<void> {
         const root = this.aocProvider.root;
-        const item: AocTreeItem = (args[0] as AocTreeItem) ?? null;
+        const item = args[0] as { year?: string, dayDir?: string } ?? null;
 
         if (!root) {
             vscode.window.showErrorMessage('Open a workspace folder first.');
