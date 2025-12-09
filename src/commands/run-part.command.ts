@@ -95,39 +95,64 @@ export class RunPartCommand implements ICommand {
                 'TS_NODE_COMPILER_OPTIONS': '{"module":"commonjs","target":"ES2022"}'
             };
 
-            exec(`npx ts-node --experimental-specifier-resolution=node "${runnerPath}"`, { cwd: root, env }, (error, stdout, stderr) => {
-                if (error) {
-                    this.outputChannel.appendLine(`Error: ${error.message}`);
-                    if (stderr) {
-                        this.outputChannel.appendLine(stderr);
-                    }
-                    return;
-                }
-                
-                if (stdout) {
-                    // Parse stats from output
-                    const statsMatch = stdout.match(/__STATS__(.+)/);
-                    if (statsMatch) {
-                        try {
-                            const stats: PartStats = JSON.parse(statsMatch[1]);
-                            this.statsService.savePartStats(year, dayNum, part as 1 | 2, stats);
-                            
-                            // Refresh tree view to show updated stats
-                            this.aocProvider.refresh();
-                        } catch (e) {
-                            // Ignore parsing errors
+            await vscode.window.withProgress({
+                location: vscode.ProgressLocation.Notification,
+                title: `Running Part ${part}...`,
+                cancellable: true
+            }, async (progress, token) => {
+                return new Promise<void>((resolve, reject) => {
+                    const child = exec(`npx ts-node --experimental-specifier-resolution=node "${runnerPath}"`, { cwd: root, env }, (error, stdout, stderr) => {
+                        if (error && !token.isCancellationRequested) {
+                            this.outputChannel.appendLine(`Error: ${error.message}`);
+                            if (stderr) {
+                                this.outputChannel.appendLine(stderr);
+                            }
+                            resolve(); // Resolve even on error to close progress
+                            return;
                         }
                         
-                        // Remove stats line from display output
-                        const displayOutput = stdout.replace(/__STATS__.+\n?/, '');
-                        this.outputChannel.append(displayOutput);
-                    } else {
-                        this.outputChannel.append(stdout);
-                    }
-                }
-                if (stderr) {
-                    this.outputChannel.append(stderr);
-                }
+                        if (token.isCancellationRequested) {
+                             // Already handled in token listener
+                             resolve();
+                             return;
+                        }
+
+                        if (stdout) {
+                            // Parse stats from output
+                            const statsMatch = stdout.match(/__STATS__(.+)/);
+                            if (statsMatch) {
+                                try {
+                                    const stats: PartStats = JSON.parse(statsMatch[1]);
+                                    this.statsService.savePartStats(year, dayNum, part as 1 | 2, stats);
+                                    
+                                    // Refresh tree view to show updated stats
+                                    this.aocProvider.refresh();
+                                } catch (e) {
+                                    // Ignore parsing errors
+                                }
+                                
+                                // Remove stats line from display output
+                                const displayOutput = stdout.replace(/__STATS__.+\n?/, '');
+                                this.outputChannel.append(displayOutput);
+                            } else {
+                                this.outputChannel.append(stdout);
+                            }
+                        }
+                        if (stderr) {
+                            this.outputChannel.append(stderr);
+                        }
+                        resolve();
+                    });
+
+                    token.onCancellationRequested(() => {
+                        if (child) {
+                            child.kill();
+                            this.outputChannel.appendLine('\n🛑 Runner stopped by user.');
+                            vscode.window.showWarningMessage('Runner stopped by user.');
+                        }
+                        resolve();
+                    });
+                });
             });
 
         } catch (error) {

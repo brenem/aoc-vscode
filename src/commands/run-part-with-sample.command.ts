@@ -101,29 +101,53 @@ export class RunPartWithSampleCommand implements ICommand {
                 'TS_NODE_COMPILER_OPTIONS': '{"module":"commonjs","target":"ES2022"}'
             };
             
-            exec(`npx ts-node --experimental-specifier-resolution=node "${runnerPath}"`, { cwd: root, env }, (error, stdout, stderr) => {
-                if (error) {
-                    this.outputChannel.appendLine(`Error: ${error.message}`);
-                    if (stderr) {
-                        this.outputChannel.appendLine(stderr);
-                    }
-                    return;
-                }
-                
-                if (stdout) {
-                    // Parse stats from output
-                    const statsMatch = stdout.match(/__STATS__(.+)/);
-                    if (statsMatch) {
-                        // Remove stats line from display output
-                        const displayOutput = stdout.replace(/__STATS__.+\n?/, '');
-                        this.outputChannel.append(displayOutput);
-                    } else {
-                        this.outputChannel.append(stdout);
-                    }
-                }
-                if (stderr) {
-                    this.outputChannel.append(stderr);
-                }
+            await vscode.window.withProgress({
+                location: vscode.ProgressLocation.Notification,
+                title: `Running Sample Part ${part}...`,
+                cancellable: true
+            }, async (progress, token) => {
+                return new Promise<void>((resolve, reject) => {
+                    const child = exec(`npx ts-node --experimental-specifier-resolution=node "${runnerPath}"`, { cwd: root, env }, (error, stdout, stderr) => {
+                        if (error && !token.isCancellationRequested) {
+                            this.outputChannel.appendLine(`Error: ${error.message}`);
+                            if (stderr) {
+                                this.outputChannel.appendLine(stderr);
+                            }
+                            resolve();
+                            return;
+                        }
+
+                        if (token.isCancellationRequested) {
+                             resolve();
+                             return;
+                        }
+                        
+                        if (stdout) {
+                            // Parse stats from output
+                            const statsMatch = stdout.match(/__STATS__(.+)/);
+                            if (statsMatch) {
+                                // Remove stats line from display output
+                                const displayOutput = stdout.replace(/__STATS__.+\n?/, '');
+                                this.outputChannel.append(displayOutput);
+                            } else {
+                                this.outputChannel.append(stdout);
+                            }
+                        }
+                        if (stderr) {
+                            this.outputChannel.append(stderr);
+                        }
+                        resolve();
+                    });
+
+                    token.onCancellationRequested(() => {
+                        if (child) {
+                            child.kill();
+                            this.outputChannel.appendLine('\n🛑 Runner stopped by user.');
+                            vscode.window.showWarningMessage('Runner stopped by user.');
+                        }
+                        resolve();
+                    });
+                });
             });
 
         } catch (error) {
