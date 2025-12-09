@@ -45,16 +45,12 @@ export class SubmitSolutionCommand implements ICommand {
 
         const active = vscode.window.activeTextEditor;
         if (!active) {
-            vscode.window.showErrorMessage('Open a solution file first.');
+            vscode.window.showErrorMessage('Open a file within a day directory first.');
             return;
         }
 
-        // Check if this is a solution file
+        // Check if this is a file within a day directory
         const filePath = active.document.uri.fsPath;
-        if (!filePath.includes('solution.ts')) {
-            vscode.window.showErrorMessage('Open a solution file first.');
-            return;
-        }
 
         // Parse year and day from file path: .../solutions/YYYY/dayXX/solution.ts
         const segments = filePath.split('/').filter(Boolean);

@@ -3,6 +3,7 @@ import { injectable } from 'tsyringe';
 import { ICommand } from '../common/types';
 import { StatsService } from '../services/stats.service';
 import { AocTreeDataProvider } from '../providers/aoc-tree-data-provider';
+import { PuzzleService } from '../services/puzzle.service';
 
 @injectable()
 export class MarkPartSolvedCommand implements ICommand {
@@ -12,26 +13,25 @@ export class MarkPartSolvedCommand implements ICommand {
 
     constructor(
         private statsService: StatsService,
-        private aocProvider: AocTreeDataProvider
+        private aocProvider: AocTreeDataProvider,
+        private puzzleService: PuzzleService
     ) {}
 
     public async execute(context: vscode.ExtensionContext, ...args: any[]): Promise<void> {
         let year: string | undefined;
         let day: string | undefined;
 
-        // Try to get from active solution file
+        // Try to get from active file
         const active = vscode.window.activeTextEditor;
         if (active) {
             const filePath = active.document.uri.fsPath;
-            if (filePath.includes('solution.ts')) {
-                // Parse year and day from file path: .../solutions/YYYY/dayXX/solution.ts
-                const segments = filePath.split('/').filter(Boolean);
-                const solutionsIndex = segments.lastIndexOf('solutions');
-                if (solutionsIndex !== -1 && solutionsIndex + 2 < segments.length) {
-                    year = segments[solutionsIndex + 1];
-                    const dayDir = segments[solutionsIndex + 2];
-                    day = dayDir.replace(/^day/, '').padStart(2, '0');
-                }
+            // Parse year and day from file path: .../solutions/YYYY/dayXX/file
+            const segments = filePath.split('/').filter(Boolean);
+            const solutionsIndex = segments.lastIndexOf('solutions');
+            if (solutionsIndex !== -1 && solutionsIndex + 2 < segments.length) {
+                year = segments[solutionsIndex + 1];
+                const dayDir = segments[solutionsIndex + 2];
+                day = dayDir.replace(/^day/, '').padStart(2, '0');
             }
         }
 
@@ -89,6 +89,9 @@ export class MarkPartSolvedCommand implements ICommand {
 
         // Refresh tree view
         this.aocProvider.refresh();
+        
+        // Refresh puzzle view
+        await this.puzzleService.refreshPuzzle(year, day);
 
         // Show confirmation
         const partText = partSelection.value === 0 ? 'Both parts' : `Part ${partSelection.value}`;
