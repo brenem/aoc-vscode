@@ -30,29 +30,30 @@ export class DebugPartWithSampleCommand implements ICommand {
         }
 
         const active = vscode.window.activeTextEditor;
-        if (!active || active.document.uri.scheme !== 'aoc-solution') {
+        if (!active) {
             vscode.window.showErrorMessage('Open a solution file first.');
             return;
         }
 
-        // Parse year and day from virtual URI
-        const match = active.document.uri.path.match(/^\/(\d{4}),\s*Day\s*(\d{2}):/);
-        if (!match) {
-            vscode.window.showErrorMessage('Could not parse year and day from file.');
+        // Check if this is a solution file
+        const filePath = active.document.uri.fsPath;
+        if (!filePath.includes('solution.ts')) {
+            vscode.window.showErrorMessage('Open a solution file first.');
             return;
         }
 
-        const year = match[1];
-        const dayNum = match[2];
-        const dayDir = `day${dayNum}`;
-
-        // Get real solution path from query parameter
-        const query = new URLSearchParams(active.document.uri.query);
-        const solutionPath = query.get('realPath');
-        if (!solutionPath) {
-            vscode.window.showErrorMessage('Could not find solution file path.');
+        // Parse year and day from file path: .../solutions/YYYY/dayXX/solution.ts
+        const segments = filePath.split(path.sep);
+        const solutionsIndex = segments.lastIndexOf('solutions');
+        if (solutionsIndex === -1 || solutionsIndex + 3 > segments.length) {
+            vscode.window.showErrorMessage('This file is not inside a solutions/YYYY/dayXX/ folder.');
             return;
         }
+
+        const year = segments[solutionsIndex + 1];
+        const dayDir = segments[solutionsIndex + 2];
+        const dayNum = dayDir.replace(/^day/, '');
+        const solutionPath = filePath;
 
         const inputPath = path.join(root, 'solutions', year, dayDir, 'input.txt');
         const samplePath = path.join(root, 'solutions', year, dayDir, 'sample.txt');
@@ -117,44 +118,7 @@ export class DebugPartWithSampleCommand implements ICommand {
             const runnerJsPath = runnerPath.replace('.ts', '.js');
             fs.writeFileSync(runnerJsPath, result.outputText, 'utf-8');
 
-            // Synchronize breakpoints from virtual file to real file
-            // Get all breakpoints set on the virtual file
-            const virtualUri = active.document.uri;
-            const realUri = vscode.Uri.file(solutionPath);
-            
-            const virtualBreakpoints = vscode.debug.breakpoints.filter(
-                bp => bp instanceof vscode.SourceBreakpoint && bp.location.uri.toString() === virtualUri.toString()
-            ) as vscode.SourceBreakpoint[];
-
-            // Remove existing breakpoints on the real file to avoid duplicates
-            const realBreakpoints = vscode.debug.breakpoints.filter(
-                bp => bp instanceof vscode.SourceBreakpoint && bp.location.uri.toString() === realUri.toString()
-            );
-            if (realBreakpoints.length > 0) {
-                vscode.debug.removeBreakpoints(realBreakpoints);
-            }
-
-            // Add breakpoints to the real file at the same line numbers
-            if (virtualBreakpoints.length > 0) {
-                const newBreakpoints = virtualBreakpoints.map(bp => {
-                    return new vscode.SourceBreakpoint(
-                        new vscode.Location(realUri, bp.location.range),
-                        bp.enabled,
-                        bp.condition,
-                        bp.hitCondition,
-                        bp.logMessage
-                    );
-                });
-                vscode.debug.addBreakpoints(newBreakpoints);
-                
-                // Restore focus to the virtual file to prevent it from being closed
-                // when VS Code opens the real file to show breakpoints
-                await vscode.window.showTextDocument(active.document, {
-                    viewColumn: active.viewColumn,
-                    preserveFocus: false,
-                    preview: false
-                });
-            }
+            // No need for breakpoint synchronization with real files
 
             // Create debug configuration with source map path overrides
             // This maps the real file path to the virtual URI
@@ -172,9 +136,7 @@ export class DebugPartWithSampleCommand implements ICommand {
                     `${solutionDir}/**/*.js`,
                     `${context.globalStorageUri.fsPath}/**/*.js`
                 ],
-                sourceMapPathOverrides: {
-                    [solutionPath]: active.document.uri.toString()
-                }
+                // No need for source map path overrides with real files
             };
 
             // Start debugging

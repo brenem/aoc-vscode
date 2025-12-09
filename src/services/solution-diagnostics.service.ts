@@ -33,7 +33,9 @@ export class SolutionDiagnosticsService {
     }
 
     private triggerCheck(document: vscode.TextDocument) {
-        if (document.uri.scheme !== 'aoc-solution') {
+        // Check if this is a solution file
+        const filePath = document.uri.fsPath;
+        if (!filePath || !filePath.includes('solution.ts')) {
             return;
         }
 
@@ -42,12 +44,8 @@ export class SolutionDiagnosticsService {
         }
 
         this.debounceTimeout = setTimeout(() => {
-            const query = new URLSearchParams(document.uri.query);
-            const realPath = query.get('realPath');
-            if (realPath) {
-                // Pass the current content of the document (unsaved changes)
-                this.checkSolution(document.uri, realPath, document.getText());
-            }
+            // Pass the current content of the document (unsaved changes)
+            this.checkSolution(document.uri, filePath, document.getText());
         }, this.DEBOUNCE_DELAY);
     }
 

@@ -21,11 +21,17 @@ export class MarkPartSolvedCommand implements ICommand {
 
         // Try to get from active solution file
         const active = vscode.window.activeTextEditor;
-        if (active && active.document.uri.scheme === 'aoc-solution') {
-            const match = active.document.uri.path.match(/^\/(\d{4}),\s*Day\s*(\d{2}):/);
-            if (match) {
-                year = match[1];
-                day = match[2];
+        if (active) {
+            const filePath = active.document.uri.fsPath;
+            if (filePath.includes('solution.ts')) {
+                // Parse year and day from file path: .../solutions/YYYY/dayXX/solution.ts
+                const segments = filePath.split('/').filter(Boolean);
+                const solutionsIndex = segments.lastIndexOf('solutions');
+                if (solutionsIndex !== -1 && solutionsIndex + 2 < segments.length) {
+                    year = segments[solutionsIndex + 1];
+                    const dayDir = segments[solutionsIndex + 2];
+                    day = dayDir.replace(/^day/, '').padStart(2, '0');
+                }
             }
         }
 

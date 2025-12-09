@@ -22,16 +22,9 @@ export class OpenSampleCommand implements ICommand {
             return;
         }
 
-        // Open the file with virtual URI
-        const dayNum = dayDir.replace(/^day/, '');
-        const fileName = `${year}, Day ${dayNum}: sample.txt`;
-        const uri = vscode.Uri.from({
-            scheme: 'aoc-solution',
-            path: `/${fileName}`,
-            query: `realPath=${encodeURIComponent(samplePath)}`
-        });
-
+        // Open the real file directly
+        const uri = vscode.Uri.file(samplePath);
         const doc = await vscode.workspace.openTextDocument(uri);
-        vscode.window.showTextDocument(doc);
+        await vscode.window.showTextDocument(doc);
     }
 }

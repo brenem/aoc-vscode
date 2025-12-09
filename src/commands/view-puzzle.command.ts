@@ -94,16 +94,8 @@ export class ViewPuzzleCommand implements ICommand {
             return; // Silently fail if solution doesn't exist
         }
 
-        const dayNum = day.padStart(2, '0');
-        const fileName = `${year}, Day ${dayNum}: solution`;
-        const uri = vscode.Uri.from({
-            scheme: 'aoc-solution',
-            path: `/${fileName}.ts`,
-            query: `realPath=${encodeURIComponent(solutionPath)}`
-        });
-
-        let doc = await vscode.workspace.openTextDocument(uri);
-        doc = await vscode.languages.setTextDocumentLanguage(doc, 'typescript');
+        const uri = vscode.Uri.file(solutionPath);
+        const doc = await vscode.workspace.openTextDocument(uri);
         await vscode.window.showTextDocument(doc, { viewColumn: vscode.ViewColumn.One, preserveFocus: false });
     }
 

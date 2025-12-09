@@ -18,7 +18,6 @@ import { RunPartWithSampleCommand } from './commands/run-part-with-sample.comman
 import { DebugPartWithSampleCommand } from './commands/debug-part-with-sample.command';
 import { OpenSampleCommand } from './commands/open-sample.command';
 import { UpgradeDayCommand } from './commands/upgrade-day.command';
-import { SolutionFileSystemProvider } from './providers/solution-file-system-provider';
 import { SolutionCodeLensProvider } from './providers/solution-codelens-provider';
 import { AocSessionService } from './services/aoc-session.service';
 import { AocApiService } from './services/aoc-api.service';
@@ -35,7 +34,6 @@ import { RefreshPuzzleCommand } from './commands/refresh-puzzle.command';
 import { MarkPartSolvedCommand } from './commands/mark-part-solved.command';
 import { DebugStatsCommand } from './commands/debug-stats.command';
 import { SubmissionService } from './services/submission.service';
-import { BreakpointSyncService } from './services/breakpoint-sync.service';
 
 export function initialize(context: vscode.ExtensionContext): void {
 	registerServices(context);
@@ -48,25 +46,6 @@ function registerServices(context: vscode.ExtensionContext) {
 
 	// Register infrastructure
 	container.registerSingleton(ICommandManager, CommandManager);
-
-	// Register services
-	container.registerSingleton(AocSessionService);
-	container.registerSingleton(AocApiService);
-	container.registerSingleton(StatsService);
-	container.registerSingleton(PuzzleService);
-	container.registerSingleton(TreeViewService);
-	container.registerSingleton(SolutionFileSystemProvider);
-	container.registerSingleton(SolutionCodeLensProvider);
-	container.registerSingleton(AocTreeDataProvider);
-	container.registerSingleton(SolutionDiagnosticsService);
-	container.registerSingleton(SubmissionService);
-	container.registerSingleton(BreakpointSyncService);
-
-	// Register commands
-	container.register<ICommand>(ICommand, { useClass: GenerateDayCommand });
-	container.register<ICommand>(ICommand, { useClass: OpenDayCommand });
-	container.register<ICommand>(ICommand, { useClass: RunDayCommand });
-	container.register<ICommand>(ICommand, { useClass: RefreshCommand });
 	container.register<ICommand>(ICommand, { useClass: AddUtilityCommand });
 	container.register<ICommand>(ICommand, { useClass: ConfigureSessionCommand });
 	container.register<ICommand>(ICommand, { useClass: DownloadInputCommand });
@@ -87,14 +66,9 @@ function registerServices(context: vscode.ExtensionContext) {
 
 function addProviders(context: vscode.ExtensionContext) {
 	// Initialize breakpoint sync service
-	const breakpointSyncService = container.resolve(BreakpointSyncService);
-	breakpointSyncService.initialize(context);
 	
-	const solutionProvider = container.resolve(SolutionFileSystemProvider);
-	context.subscriptions.push(vscode.workspace.registerFileSystemProvider('aoc-solution', solutionProvider, { isCaseSensitive: true }));
-
 	const codeLensProvider = container.resolve(SolutionCodeLensProvider);
-	context.subscriptions.push(vscode.languages.registerCodeLensProvider({ language: 'typescript', scheme: 'aoc-solution' }, codeLensProvider));
+	context.subscriptions.push(vscode.languages.registerCodeLensProvider({ language: 'typescript', scheme: 'file' }, codeLensProvider));
 	
 	const diagnosticsService = container.resolve(SolutionDiagnosticsService);
 	diagnosticsService.initialize(context);
@@ -124,32 +98,30 @@ function addTreeDataProvider(context: vscode.ExtensionContext) {
 	// Sync tree view selection with active editor
 	context.subscriptions.push(
 		vscode.window.onDidChangeActiveTextEditor(editor => {
-			if (editor && editor.document.uri.scheme === 'aoc-solution') {
-				// Parse year, day, and filename from the URI path
-				// Format: /YYYY, Day DD: filename.ts
-				const match = editor.document.uri.path.match(/^\/(\d{4}),\s*Day\s*(\d{2}):\s*(.+)$/);
-				if (match) {
-					const year = match[1];
-					const dayNum = match[2];
-					const fileName = match[3];
-					const dayDir = `day${dayNum}`;
+			if (editor) {
+				const filePath = editor.document.uri.fsPath;
+				if (filePath && filePath.includes('solution.ts')) {
+					// Parse year and day from file path: .../solutions/YYYY/dayXX/solution.ts
+					const segments = filePath.split('/').filter(Boolean);
+					const solutionsIndex = segments.lastIndexOf('solutions');
+					if (solutionsIndex !== -1 && solutionsIndex + 2 < segments.length) {
+						const year = segments[solutionsIndex + 1];
+						const dayDir = segments[solutionsIndex + 2];
+						const fileName = 'solution.ts';
 
-					// Get the real path from query parameter
-					const query = new URLSearchParams(editor.document.uri.query);
-					const realPath = query.get('realPath');
+						// Find the corresponding tree item (the file, not the day)
+						const fileItem = new AocTreeItem(
+							fileName,
+							vscode.TreeItemCollapsibleState.None,
+							'dayFile',
+							year,
+							dayDir,
+							filePath
+						);
 
-					// Find the corresponding tree item (the file, not the day)
-					const fileItem = new AocTreeItem(
-						fileName,
-						vscode.TreeItemCollapsibleState.None,
-						'dayFile',
-						year,
-						dayDir,
-						realPath || undefined
-					);
-
-					// Reveal the item in the tree view
-					treeView.reveal(fileItem, { select: true, focus: false });
+						// Reveal the item in the tree view
+						treeView.reveal(fileItem, { select: true, focus: false });
+					}
 				}
 			}
 		})

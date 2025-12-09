@@ -39,29 +39,30 @@ export class RunPartWithSampleCommand implements ICommand {
         }
 
         const active = vscode.window.activeTextEditor;
-        if (!active || active.document.uri.scheme !== 'aoc-solution') {
+        if (!active) {
             vscode.window.showErrorMessage('Open a solution file first.');
             return;
         }
 
-        // Parse year and day from virtual URI
-        const match = active.document.uri.path.match(/^\/(\d{4}),\s*Day\s*(\d{2}):/);
-        if (!match) {
-            vscode.window.showErrorMessage('Could not parse year and day from file.');
+        // Check if this is a solution file
+        const filePath = active.document.uri.fsPath;
+        if (!filePath.includes('solution.ts')) {
+            vscode.window.showErrorMessage('Open a solution file first.');
             return;
         }
 
-        const year = match[1];
-        const dayNum = match[2];
-        const dayDir = `day${dayNum}`;
-
-        // Get real solution path from query parameter
-        const query = new URLSearchParams(active.document.uri.query);
-        const solutionPath = query.get('realPath');
-        if (!solutionPath) {
-            vscode.window.showErrorMessage('Could not find solution file path.');
+        // Parse year and day from file path: .../solutions/YYYY/dayXX/solution.ts
+        const segments = filePath.split(path.sep);
+        const solutionsIndex = segments.lastIndexOf('solutions');
+        if (solutionsIndex === -1 || solutionsIndex + 3 > segments.length) {
+            vscode.window.showErrorMessage('This file is not inside a solutions/YYYY/dayXX/ folder.');
             return;
         }
+
+        const year = segments[solutionsIndex + 1];
+        const dayDir = segments[solutionsIndex + 2];
+        const dayNum = dayDir.replace(/^day/, '');
+        const solutionPath = filePath;
 
         const inputPath = path.join(root, 'solutions', year, dayDir, 'input.txt');
         const samplePath = path.join(root, 'solutions', year, dayDir, 'sample.txt');

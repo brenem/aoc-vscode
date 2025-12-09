@@ -46,16 +46,8 @@ export class OpenDayCommand implements ICommand {
             return;
         }
 
-        const dayNum = dayDir!.replace(/^day/, '');
-        const fileName = `${year}, Day ${dayNum}: solution`;
-        const uri = vscode.Uri.from({
-            scheme: 'aoc-solution',
-            path: `/${fileName}.ts`,
-            query: `realPath=${encodeURIComponent(solutionPath)}`
-        });
-
-        let doc = await vscode.workspace.openTextDocument(uri);
-        doc = await vscode.languages.setTextDocumentLanguage(doc, 'typescript');
-        vscode.window.showTextDocument(doc);
+        const uri = vscode.Uri.file(solutionPath);
+        const doc = await vscode.workspace.openTextDocument(uri);
+        await vscode.window.showTextDocument(doc);
     }
 }

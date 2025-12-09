@@ -44,19 +44,29 @@ export class SubmitSolutionCommand implements ICommand {
         }
 
         const active = vscode.window.activeTextEditor;
-        if (!active || active.document.uri.scheme !== 'aoc-solution') {
+        if (!active) {
             vscode.window.showErrorMessage('Open a solution file first.');
             return;
         }
 
-        const match = active.document.uri.path.match(/^\/(\d{4}),\s*Day\s*(\d{2}):/);
-        if (!match) {
+        // Check if this is a solution file
+        const filePath = active.document.uri.fsPath;
+        if (!filePath.includes('solution.ts')) {
+            vscode.window.showErrorMessage('Open a solution file first.');
+            return;
+        }
+
+        // Parse year and day from file path: .../solutions/YYYY/dayXX/solution.ts
+        const segments = filePath.split('/').filter(Boolean);
+        const solutionsIndex = segments.lastIndexOf('solutions');
+        if (solutionsIndex === -1 || solutionsIndex + 2 >= segments.length) {
             vscode.window.showErrorMessage('Could not determine Day/Year from file.');
             return;
         }
 
-        const year = match[1];
-        const day = match[2];
+        const year = segments[solutionsIndex + 1];
+        const dayDir = segments[solutionsIndex + 2];
+        const day = dayDir.replace(/^day/, '').padStart(2, '0');
 
         // Ask for part
         const partStr = await vscode.window.showQuickPick(['Part 1', 'Part 2'], {
