@@ -96,7 +96,12 @@ export class RunPartWithSampleCommand implements ICommand {
             
             // Execute and capture output - using ts-node
             // Adding --experimental-specifier-resolution=node allows importing extensionless paths even in ESM mode
-            exec(`npx ts-node --experimental-specifier-resolution=node "${runnerPath}"`, { cwd: root }, (error, stdout, stderr) => {
+            const env = { 
+                ...process.env,
+                'TS_NODE_COMPILER_OPTIONS': '{"module":"commonjs","target":"ES2022"}'
+            };
+            
+            exec(`npx ts-node --experimental-specifier-resolution=node "${runnerPath}"`, { cwd: root, env }, (error, stdout, stderr) => {
                 if (error) {
                     this.outputChannel.appendLine(`Error: ${error.message}`);
                     if (stderr) {

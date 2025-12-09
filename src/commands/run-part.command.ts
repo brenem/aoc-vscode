@@ -90,7 +90,12 @@ export class RunPartCommand implements ICommand {
             // Using npx ensures we use the local version or download if missing (though usually local is preferred)
             // Adding --experimental-specifier-resolution=node allows importing extensionless paths even in ESM mode
             // Win32 support: npx might need .cmd extension but usually node handles it
-            exec(`npx ts-node --experimental-specifier-resolution=node "${runnerPath}"`, { cwd: root }, (error, stdout, stderr) => {
+            const env = { 
+                ...process.env,
+                'TS_NODE_COMPILER_OPTIONS': '{"module":"commonjs","target":"ES2022"}'
+            };
+
+            exec(`npx ts-node --experimental-specifier-resolution=node "${runnerPath}"`, { cwd: root, env }, (error, stdout, stderr) => {
                 if (error) {
                     this.outputChannel.appendLine(`Error: ${error.message}`);
                     if (stderr) {

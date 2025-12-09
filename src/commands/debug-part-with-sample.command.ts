@@ -85,7 +85,7 @@ export class DebugPartWithSampleCommand implements ICommand {
 
             // Create debug configuration using node and ts-node register
             const debugConfig: vscode.DebugConfiguration = {
-                type: 'node',
+                type: 'pwa-node',
                 request: 'launch',
                 name: `Debug Part ${part} (Sample)`,
                 program: runnerPath,
@@ -95,7 +95,7 @@ export class DebugPartWithSampleCommand implements ICommand {
                     tsNodeRegisterPath
                 ],
                 env: {
-                    'TS_NODE_COMPILER_OPTIONS': '{"module":"commonjs"}'
+                    'TS_NODE_COMPILER_OPTIONS': '{"module":"commonjs","target":"ES2022","inlineSourceMap":true,"inlineSources":true}'
                 },
                 console: 'integratedTerminal',
                 internalConsoleOptions: 'neverOpen',

@@ -29,12 +29,11 @@ export function createRunner(config: RunnerConfig): string {
         .replace(/`/g, '\\`')
         .replace(/\$/g, '\\$');
     
-// Use absolute path for import (replace .ts with .js for ESM compatibility)
-// ts-node/Node16 requires explicit extensions, and .js resolves to .ts
-const importPath = solutionPath.replace(/\.ts$/, '.js').replace(/\\/g, '/');
+// Use absolute path for import - ts-node in CommonJS mode can handle .ts files directly
+const importPath = solutionPath.replace(/\\/g, '/');
 
 const runnerCode = `
-import { part${part} } from '${importPath}';
+const { part${part} } = require('${importPath}');
 
 const input = \`${escapedInput}\`;
 
