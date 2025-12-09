@@ -80,6 +80,7 @@ export class RunPartWithSampleCommand implements ICommand {
             }
 
             // Create runner script with sample input
+            // Create runner script with sample input
             const runnerPath = createRunner({
                 solutionPath,
                 inputPath,
@@ -88,28 +89,14 @@ export class RunPartWithSampleCommand implements ICommand {
                 inputSource: 'sample'
             });
 
-            // Compile TypeScript to JavaScript using TS compiler API
-            const runnerCode = fs.readFileSync(runnerPath, 'utf-8');
-            const result = ts.transpileModule(runnerCode, {
-                compilerOptions: {
-                    module: ts.ModuleKind.CommonJS,
-                    target: ts.ScriptTarget.ES2020,
-                    esModuleInterop: true,
-                    skipLibCheck: true
-                }
-            });
-
-            // Write compiled JavaScript
-            const runnerJsPath = runnerPath.replace('.ts', '.js');
-            fs.writeFileSync(runnerJsPath, result.outputText, 'utf-8');
-
             // Clear and show output channel
             this.outputChannel.clear();
             this.outputChannel.show(true);
             this.outputChannel.appendLine('🧪 Running with SAMPLE input...\n');
             
-            // Execute and capture output
-            exec(`node "${runnerJsPath}"`, { cwd: root }, (error, stdout, stderr) => {
+            // Execute and capture output - using ts-node
+            // Adding --experimental-specifier-resolution=node allows importing extensionless paths even in ESM mode
+            exec(`npx ts-node --experimental-specifier-resolution=node "${runnerPath}"`, { cwd: root }, (error, stdout, stderr) => {
                 if (error) {
                     this.outputChannel.appendLine(`Error: ${error.message}`);
                     if (stderr) {

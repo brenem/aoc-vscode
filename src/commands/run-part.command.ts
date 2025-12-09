@@ -73,6 +73,7 @@ export class RunPartCommand implements ICommand {
             }
 
             // Create runner script
+            // Create runner script
             const runnerPath = createRunner({
                 solutionPath,
                 inputPath,
@@ -80,27 +81,16 @@ export class RunPartCommand implements ICommand {
                 tempDir: context.globalStorageUri.fsPath
             });
 
-            // Compile TypeScript to JavaScript using TS compiler API
-            const runnerCode = fs.readFileSync(runnerPath, 'utf-8');
-            const result = ts.transpileModule(runnerCode, {
-                compilerOptions: {
-                    module: ts.ModuleKind.CommonJS,
-                    target: ts.ScriptTarget.ES2020,
-                    esModuleInterop: true,
-                    skipLibCheck: true
-                }
-            });
-
-            // Write compiled JavaScript
-            const runnerJsPath = runnerPath.replace('.ts', '.js');
-            fs.writeFileSync(runnerJsPath, result.outputText, 'utf-8');
-
             // Clear and show output channel
             this.outputChannel.clear();
             this.outputChannel.show(true);
             
-            // Execute and capture output
-            exec(`node "${runnerJsPath}"`, { cwd: root }, (error, stdout, stderr) => {
+            // Execute and capture output using ts-node
+            // We run from the workspace root so it picks up node_modules (including ts-node if installed locally)
+            // Using npx ensures we use the local version or download if missing (though usually local is preferred)
+            // Adding --experimental-specifier-resolution=node allows importing extensionless paths even in ESM mode
+            // Win32 support: npx might need .cmd extension but usually node handles it
+            exec(`npx ts-node --experimental-specifier-resolution=node "${runnerPath}"`, { cwd: root }, (error, stdout, stderr) => {
                 if (error) {
                     this.outputChannel.appendLine(`Error: ${error.message}`);
                     if (stderr) {
