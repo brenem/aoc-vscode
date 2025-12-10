@@ -1,7 +1,5 @@
 import * as vscode from 'vscode';
-import * as fs from 'fs';
 import { ICommand } from '../common/types';
-import { AocTreeDataProvider } from '../providers/aoc-tree-data-provider';
 import { injectable } from 'tsyringe';
 
 @injectable()
@@ -10,7 +8,6 @@ export class OpenSampleCommand implements ICommand {
         return 'aoc.openSample';
     }
 
-    constructor(private aocProvider: AocTreeDataProvider) {}
 
     public async execute(context: vscode.ExtensionContext, ...args: any[]): Promise<void> {
         const year = args[0] as string;

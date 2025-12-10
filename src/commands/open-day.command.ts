@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 
 import { ICommand } from '../common/types';
-import { AocTreeDataProvider, AocTreeItem } from '../providers/aoc-tree-data-provider';
+import { AocTreeDataProvider } from '../providers/aoc-tree-data-provider';
 import { injectable } from 'tsyringe';
 
 @injectable()

@@ -19,10 +19,6 @@ import { DebugPartWithSampleCommand } from './commands/debug-part-with-sample.co
 import { OpenSampleCommand } from './commands/open-sample.command';
 import { UpgradeDayCommand } from './commands/upgrade-day.command';
 import { SolutionCodeLensProvider } from './providers/solution-codelens-provider';
-import { AocSessionService } from './services/aoc-session.service';
-import { AocApiService } from './services/aoc-api.service';
-import { StatsService } from './services/stats.service';
-import { PuzzleService } from './services/puzzle.service';
 import { TreeViewService } from './services/tree-view.service';
 import { PuzzleWebviewSerializer } from './services/puzzle-webview-serializer';
 import { SolutionDiagnosticsService } from './services/solution-diagnostics.service';
@@ -33,7 +29,6 @@ import { SubmitSolutionCommand } from './commands/submit-solution.command';
 import { RefreshPuzzleCommand } from './commands/refresh-puzzle.command';
 import { MarkPartSolvedCommand } from './commands/mark-part-solved.command';
 import { DebugStatsCommand } from './commands/debug-stats.command';
-import { SubmissionService } from './services/submission.service';
 
 export function initialize(context: vscode.ExtensionContext): void {
 	registerServices(context);
