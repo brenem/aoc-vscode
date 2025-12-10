@@ -73,6 +73,13 @@ export class RunPartWithSampleCommand implements ICommand {
             return;
         }
 
+        // Check if sample.txt is empty
+        const sampleContent = fs.readFileSync(samplePath, 'utf8');
+        if (sampleContent.trim().length === 0) {
+            vscode.window.showErrorMessage('sample.txt is empty. Please add sample input before running.');
+            return;
+        }
+
         // Save all unsaved files before running
         await vscode.workspace.saveAll();
 

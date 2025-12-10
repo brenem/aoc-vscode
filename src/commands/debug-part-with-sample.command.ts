@@ -64,6 +64,13 @@ export class DebugPartWithSampleCommand implements ICommand {
             return;
         }
 
+        // Check if sample.txt is empty
+        const sampleContent = fs.readFileSync(samplePath, 'utf8');
+        if (sampleContent.trim().length === 0) {
+            vscode.window.showErrorMessage('sample.txt is empty. Please add sample input before debugging.');
+            return;
+        }
+
         // Save all unsaved files before debugging
         await vscode.workspace.saveAll();
 
