@@ -30,9 +30,9 @@ import { RefreshPuzzleCommand } from './commands/refresh-puzzle.command';
 import { MarkPartSolvedCommand } from './commands/mark-part-solved.command';
 import { DebugStatsCommand } from './commands/debug-stats.command';
 
-export function initialize(context: vscode.ExtensionContext): void {
+export async function initialize(context: vscode.ExtensionContext): Promise<void> {
 	registerServices(context);
-	addProviders(context);
+	await addProviders(context);
 }
 
 function registerServices(context: vscode.ExtensionContext) {
@@ -63,7 +63,7 @@ function registerServices(context: vscode.ExtensionContext) {
 	container.register<ICommand>(ICommand, { useClass: DebugStatsCommand });
 }
 
-function addProviders(context: vscode.ExtensionContext) {
+async function addProviders(context: vscode.ExtensionContext) {
 	// Initialize breakpoint sync service
 	
 	const codeLensProvider = container.resolve(SolutionCodeLensProvider);
@@ -78,14 +78,24 @@ function addProviders(context: vscode.ExtensionContext) {
 		vscode.window.registerWebviewPanelSerializer('aocPuzzle', puzzleSerializer)
 	);
 
-	addTreeDataProvider(context);
+	await addTreeDataProvider(context);
 }
 
-function addTreeDataProvider(context: vscode.ExtensionContext) {
-	// Get the provider instance and set up tree view
+async function addTreeDataProvider(context: vscode.ExtensionContext) {
+	// Get the provider instance
 	const aocProvider = container.resolve(AocTreeDataProvider);
+	
+	// Initialize the provider BEFORE registering
+	// This ensures getChildren() won't be called before we're ready
+	await aocProvider.initialize();
+	
+	// Set context to make the view visible
+	await vscode.commands.executeCommand('setContext', 'aocInitialized', true);
+	
+	// Now register the tree data provider - this creates the view
 	const treeView = vscode.window.createTreeView('aocExplorer', {
-		treeDataProvider: aocProvider
+		treeDataProvider: aocProvider,
+		showCollapseAll: true
 	});
 
 	// Register tree view with service for programmatic access

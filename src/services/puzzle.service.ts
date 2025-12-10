@@ -79,10 +79,26 @@ export class PuzzleService {
         const articleRegex = /<article class="day-desc">(.+?)<\/article>/gs;
         const articles = [...html.matchAll(articleRegex)];
 
-        const part1 = articles[0] ? articles[0][1] : '';
-        const part2 = articles[1] ? articles[1][1] : undefined;
+        const part1 = articles[0] ? this.resolveLinks(articles[0][1]) : '';
+        const part2 = articles[1] ? this.resolveLinks(articles[1][1]) : undefined;
 
         return { part1, part2, title };
+    }
+
+    private resolveLinks(html: string): string {
+        const baseUrl = 'https://adventofcode.com';
+        
+        // Resolve relative href links
+        html = html.replace(/href="(\/[^"]*)"/g, (match, path) => {
+            return `href="${baseUrl}${path}"`;
+        });
+        
+        // Resolve relative src links (for images, scripts, etc.)
+        html = html.replace(/src="(\/[^"]*)"/g, (match, path) => {
+            return `src="${baseUrl}${path}"`;
+        });
+        
+        return html;
     }
 
     private async loadFromCache(year: string, day: string): Promise<PuzzleContent | null> {

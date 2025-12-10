@@ -37,6 +37,7 @@ export class AocTreeDataProvider implements vscode.TreeDataProvider<AocTreeItem>
     private _onDidChangeTreeData = new vscode.EventEmitter<AocTreeItem | undefined | void>();
     readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
     private workspaceRoot: string;
+    private isInitialized = false;
 
     constructor(private statsService: StatsService) {
         const workspaceFolders = vscode.workspace.workspaceFolders;
@@ -48,6 +49,12 @@ export class AocTreeDataProvider implements vscode.TreeDataProvider<AocTreeItem>
 
     get root(): string {
         return this.workspaceRoot;
+    }
+
+    async initialize(): Promise<void> {
+        // Mark as initialized and trigger initial render
+        this.isInitialized = true;
+        this._onDidChangeTreeData.fire();
     }
 
     refresh(): void {
@@ -104,7 +111,12 @@ export class AocTreeDataProvider implements vscode.TreeDataProvider<AocTreeItem>
         return undefined;
     }
 
-    async getChildren(element?: AocTreeItem): Promise<AocTreeItem[]> {
+    async getChildren(element?: AocTreeItem): Promise<AocTreeItem[] | undefined> {
+        // Return undefined when not initialized to prevent welcome message from showing
+        if (!this.isInitialized) {
+            return undefined;
+        }
+
         if (!this.workspaceRoot) {
             vscode.window.showInformationMessage('Open a workspace to use AoC Explorer');
             return [];

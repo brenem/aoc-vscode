@@ -18,7 +18,8 @@
       "explorer": [
         {
           "id": "aocExplorer",
-          "name": "AoC Explorer"
+          "name": "AoC Explorer",
+          "when": "aocInitialized"
         }
       ]
     },
