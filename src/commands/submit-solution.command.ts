@@ -55,7 +55,7 @@ export class SubmitSolutionCommand implements ICommand {
         // Parse year and day from file path: .../solutions/YYYY/dayXX/solution.ts
         const segments = filePath.split('/').filter(Boolean);
         const solutionsIndex = segments.lastIndexOf('solutions');
-        if (solutionsIndex === -1 || solutionsIndex + 2 >= segments.length) {
+        if (solutionsIndex === -1 || solutionsIndex + 3 > segments.length) {
             vscode.window.showErrorMessage('Could not determine Day/Year from file.');
             return;
         }
@@ -110,8 +110,11 @@ export class SubmitSolutionCommand implements ICommand {
                     });
                     vscode.window.showInformationMessage(`🎉 Correct! ${result.message}`);
                     
-                    // Refresh the puzzle view and tree view
+                    // Refresh the puzzle view and ensure it completes
                     await this.puzzleService.refreshPuzzle(year, day);
+                    
+                    // Allow event loop to process before refreshing tree view
+                    await Promise.resolve();
                     
                     // Refresh tree view to show solved status
                     this.aocProvider.refresh();
