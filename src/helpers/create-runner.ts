@@ -51,7 +51,7 @@ const input = \`${escapedInput}\`;
         result = await part${part}(input);
     } catch (e) {
         success = false;
-        error = e instanceof Error ? e.message : String(e);
+        error = e instanceof Error ? (e.stack || e.message) : String(e);
     }
 
     const elapsed = Date.now() - startTime;
