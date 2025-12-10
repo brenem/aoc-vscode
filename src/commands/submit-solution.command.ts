@@ -89,43 +89,44 @@ export class SubmitSolutionCommand implements ICommand {
         if (!answer) return;
 
         try {
-            await vscode.window.withProgress({
+            const result = await vscode.window.withProgress({
                 location: vscode.ProgressLocation.Notification,
                 title: 'Submitting solution...',
                 cancellable: false
             }, async () => {
-                const result = await this.submissionService.submit(year, day, part === 1 ? '1' : '2', answer.trim());
-                
-                switch (result.status) {
-                    case 'CORRECT':
-                        // Save the submitted answer to stats
-                        this.statsService.savePartStats(year, day, part, {
-                            result: answer.trim(),
-                            executionTime: 0, // Submission doesn't track execution time
-                            timestamp: Date.now(),
-                            success: true,
-                            solved: true
-                        });
-                        vscode.window.showInformationMessage(`🎉 Correct! ${result.message}`);
-                        // Refresh the puzzle view if open
-                        await this.puzzleService.refreshPuzzle(year, day);
-                        // Refresh tree view to show solved status
-                        this.aocProvider.refresh();
-                        break;
-                    case 'INCORRECT':
-                        vscode.window.showErrorMessage(`❌ Incorrect. ${result.message}`);
-                        break;
-                    case 'WAIT':
-                        vscode.window.showWarningMessage(`⏳ ${result.message}`);
-                        break;
-                    case 'ALREADY_SOLVED':
-                        vscode.window.showInformationMessage(`ℹ️ ${result.message}`);
-                        break;
-                    case 'UNKNOWN':
-                        vscode.window.showWarningMessage(`❓ ${result.message}`);
-                        break;
-                }
+                return await this.submissionService.submit(year, day, part === 1 ? '1' : '2', answer.trim());
             });
+            
+            // Handle result outside the progress callback so UI can update
+            switch (result.status) {
+                case 'CORRECT':
+                    // Save the submitted answer to stats
+                    this.statsService.savePartStats(year, day, part as 1 | 2, {
+                        result: answer.trim(),
+                        executionTime: 0, // Submission doesn't track execution time
+                        timestamp: Date.now(),
+                        success: true,
+                        solved: true
+                    });
+                    vscode.window.showInformationMessage(`🎉 Correct! ${result.message}`);
+                    // Refresh the puzzle view if open
+                    await this.puzzleService.refreshPuzzle(year, day);
+                    // Refresh tree view to show solved status
+                    this.aocProvider.refresh();
+                    break;
+                case 'INCORRECT':
+                    vscode.window.showErrorMessage(`❌ Incorrect. ${result.message}`);
+                    break;
+                case 'WAIT':
+                    vscode.window.showWarningMessage(`⏳ ${result.message}`);
+                    break;
+                case 'ALREADY_SOLVED':
+                    vscode.window.showInformationMessage(`ℹ️ ${result.message}`);
+                    break;
+                case 'UNKNOWN':
+                    vscode.window.showWarningMessage(`❓ ${result.message}`);
+                    break;
+            }
         } catch (error) {
              const message = error instanceof Error ? error.message : String(error);
              vscode.window.showErrorMessage(`Submission Error: ${message}`);
