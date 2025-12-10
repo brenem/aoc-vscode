@@ -81,16 +81,14 @@ export class MarkPartSolvedCommand implements ICommand {
 
         // Mark part(s) as solved
         if (partSelection.value === 0 || partSelection.value === 1) {
-            this.statsService.markPartSolved(year, day, 1);
+            await this.statsService.markPartSolved(year, day, 1);
         }
         if (partSelection.value === 0 || partSelection.value === 2) {
-            this.statsService.markPartSolved(year, day, 2);
+            await this.statsService.markPartSolved(year, day, 2);
         }
 
-        // Refresh tree view
+        // Refresh tree view and puzzle view
         this.aocProvider.refresh();
-        
-        // Refresh puzzle view
         await this.puzzleService.refreshPuzzle(year, day);
 
         // Show confirmation

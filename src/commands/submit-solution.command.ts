@@ -101,7 +101,7 @@ export class SubmitSolutionCommand implements ICommand {
             switch (result.status) {
                 case 'CORRECT':
                     // Save the submitted answer to stats
-                    this.statsService.savePartStats(year, day, part as 1 | 2, {
+                    await this.statsService.savePartStats(year, day, part as 1 | 2, {
                         result: answer.trim(),
                         executionTime: 0, // Submission doesn't track execution time
                         timestamp: Date.now(),
@@ -109,8 +109,10 @@ export class SubmitSolutionCommand implements ICommand {
                         solved: true
                     });
                     vscode.window.showInformationMessage(`🎉 Correct! ${result.message}`);
-                    // Refresh the puzzle view if open
+                    
+                    // Refresh the puzzle view and tree view
                     await this.puzzleService.refreshPuzzle(year, day);
+                    
                     // Refresh tree view to show solved status
                     this.aocProvider.refresh();
                     break;

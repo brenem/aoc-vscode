@@ -124,15 +124,17 @@ export class RunPartCommand implements ICommand {
                             // Parse stats from output
                             const statsMatch = stdout.match(/__STATS__(.+)/);
                             if (statsMatch) {
-                                try {
-                                    const stats: PartStats = JSON.parse(statsMatch[1]);
-                                    this.statsService.savePartStats(year, dayNum, part as 1 | 2, stats);
-                                    
-                                    // Refresh tree view to show updated stats
-                                    this.aocProvider.refresh();
-                                } catch (e) {
-                                    // Ignore parsing errors
-                                }
+                                (async () => {
+                                    try {
+                                        const stats: PartStats = JSON.parse(statsMatch[1]);
+                                        await this.statsService.savePartStats(year, dayNum, part as 1 | 2, stats);
+                                        
+                                        // Refresh tree view to show updated stats
+                                        this.aocProvider.refresh();
+                                    } catch (e) {
+                                        // Ignore parsing errors
+                                    }
+                                })();
                                 
                                 // Remove stats line from display output
                                 const displayOutput = stdout.replace(/__STATS__.+\n?/, '');

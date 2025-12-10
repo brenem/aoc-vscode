@@ -30,7 +30,7 @@ export class StatsService {
         return `${year}-${paddedDay}`;
     }
 
-    public savePartStats(year: string, day: string, part: 1 | 2, stats: PartStats): void {
+    public async savePartStats(year: string, day: string, part: 1 | 2, stats: PartStats): Promise<void> {
         const key = this.getKey(year, day);
         let dayStats = this.stats.get(key) || {};
 
@@ -50,7 +50,7 @@ export class StatsService {
         }
 
         this.stats.set(key, dayStats);
-        this.persistStats();
+        await this.persistStats();
     }
 
     public getDayStats(year: string, day: string): DayStats | undefined {
@@ -62,7 +62,7 @@ export class StatsService {
         return part === 1 ? dayStats?.part1 : dayStats?.part2;
     }
 
-    public markPartSolved(year: string, day: string, part: 1 | 2): void {
+    public async markPartSolved(year: string, day: string, part: 1 | 2): Promise<void> {
         const key = this.getKey(year, day);
         let dayStats = this.stats.get(key) || {};
 
@@ -87,7 +87,7 @@ export class StatsService {
         }
 
         this.stats.set(key, dayStats);
-        this.persistStats();
+        await this.persistStats();
     }
 
     public isPartSolved(year: string, day: string, part: 1 | 2): boolean {
@@ -144,8 +144,8 @@ export class StatsService {
         }
     }
 
-    private persistStats(): void {
+    private async persistStats(): Promise<void> {
         const obj = Object.fromEntries(this.stats.entries());
-        this.context.workspaceState.update(StatsService.STORAGE_KEY, obj);
+        await this.context.workspaceState.update(StatsService.STORAGE_KEY, obj);
     }
 }
