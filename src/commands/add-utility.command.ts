@@ -64,9 +64,8 @@ export class AddUtilityCommand implements ICommand {
 `;
 
         fs.writeFileSync(filePath, template, 'utf-8');
-        this.aocProvider.refresh();
 
         const doc = await vscode.workspace.openTextDocument(filePath);
-        vscode.window.showTextDocument(doc);
+        await vscode.window.showTextDocument(doc);
     }
 }

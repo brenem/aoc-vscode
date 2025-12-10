@@ -38,8 +38,6 @@ export class UpgradeDayCommand implements ICommand {
             // Called from command palette - upgrade all
             await this.upgradeAll(context, root);
         }
-
-        this.aocProvider.refresh();
     }
 
     private async upgradeSingleDay(

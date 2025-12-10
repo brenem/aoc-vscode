@@ -114,10 +114,8 @@ export async function part2(input: string): Promise<number | string | bigint> {
             `AoC day created: ${year} ${dayDirName}`
         );
 
-        this.aocProvider.refresh();
-
-        const uri = vscode.Uri.file(solutionPath);
-        const doc = await vscode.workspace.openTextDocument(uri);
-        await vscode.window.showTextDocument(doc);
+        // Open solution file and puzzle webview (same as clicking the day node)
+        const dayNum = day.padStart(2, '0');
+        await vscode.commands.executeCommand('aoc.viewPuzzle', year, dayNum);
     }
 }

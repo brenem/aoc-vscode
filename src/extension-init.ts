@@ -169,5 +169,20 @@ function addTreeDataProvider(context: vscode.ExtensionContext) {
 	// 3. Sync immediately on startup if we have an active editor
 	// Use a small timeout to let the tree view initialize fully
 	setTimeout(syncTreeViewSelection, 500);
+
+	// Add file system watchers to auto-refresh tree view when files change
+	const workspaceRoot = aocProvider.root;
+	if (workspaceRoot) {
+		// Watch for changes in solutions directory structure (new folders, deleted folders)
+		const solutionsPattern = new vscode.RelativePattern(workspaceRoot, 'solutions/**');
+		const fileWatcher = vscode.workspace.createFileSystemWatcher(solutionsPattern);
+		
+		// Refresh on any file/folder create, delete, or change
+		fileWatcher.onDidCreate(() => aocProvider.refresh());
+		fileWatcher.onDidDelete(() => aocProvider.refresh());
+		fileWatcher.onDidChange(() => aocProvider.refresh());
+		
+		context.subscriptions.push(fileWatcher);
+	}
 }
 
