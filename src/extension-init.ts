@@ -31,6 +31,7 @@ import { MarkPartSolvedCommand } from './commands/mark-part-solved.command';
 import { DebugStatsCommand } from './commands/debug-stats.command';
 import { AocWorkspaceService } from './services/aoc-workspace.service';
 import { InitProjectCommand } from './commands/init-project.command';
+import { GenerateTsconfigCommand } from './commands/generate-tsconfig.command';
 import { AOC_CONFIG_FILENAME } from './common/aoc-config.interface';
 
 export async function initialize(context: vscode.ExtensionContext): Promise<void> {
@@ -66,6 +67,7 @@ function registerServices(context: vscode.ExtensionContext) {
 	
 	// Register commands
 	container.register<ICommand>(ICommand, { useClass: InitProjectCommand });
+	container.register<ICommand>(ICommand, { useClass: GenerateTsconfigCommand });
 	container.register<ICommand>(ICommand, { useClass: AddUtilityCommand });
 	container.register<ICommand>(ICommand, { useClass: GenerateDayCommand });
 	container.register<ICommand>(ICommand, { useClass: OpenDayCommand });

@@ -72,37 +72,78 @@ export class DebugPartCommand implements ICommand {
                 fs.mkdirSync(context.globalStorageUri.fsPath, { recursive: true });
             }
 
-            // Create runner script (TypeScript) for solution.ts
-            // createRunner now handles the import path adjustment
-            const runnerPath = createRunner({
-                solutionPath: solutionPath, 
-                inputPath,
-                part: part as 1 | 2,
-                tempDir: context.globalStorageUri.fsPath
-            });
+            // For debugging, we need a simpler approach that allows breakpoints in the solution file
+            // Instead of using a runner script, create a minimal wrapper that debugger can trace
+            const debugWrapper = `
+import * as fs from 'fs';
+const solutionPath = '${solutionPath.replace(/\\/g, '\\\\')}';
+const inputPath = '${inputPath.replace(/\\/g, '\\\\')}';
+const part = ${part};
+
+// Import the solution module dynamically
+async function debug() {
+    const solution = await import(solutionPath);
+    const partFn = solution['part' + part];
+    
+    const input = fs.readFileSync(inputPath, 'utf-8');
+    
+    console.log('='.repeat(50));
+    console.log(\`Debugging Part \${part}\`);
+    console.log('='.repeat(50));
+    
+    const startTime = Date.now();
+    const result = await partFn(input);
+    const elapsed = Date.now() - startTime;
+    
+    console.log('\\nResult:', result);
+    console.log(\`Time: \${elapsed}ms\`);
+    console.log('='.repeat(50));
+}
+
+debug().catch(console.error);
+`;
+
+            const debugWrapperPath = path.join(context.globalStorageUri.fsPath, `debug-part${part}.ts`);
+            fs.writeFileSync(debugWrapperPath, debugWrapper, 'utf-8');
 
             // Locate ts-node/register within the extension
             // Only works if ts-node is a dependency of the extension
             const tsNodeRegisterPath = path.join(context.extensionPath, 'node_modules', 'ts-node', 'register', 'index.js');
+
+            // Force ts-node to ignore the user's tsconfig.json and use its defaults
+            // This ensures Node.js types are available even if user's config has lib: ["ES2021"]
+            // Also configure source maps so breakpoints work in the debugger
+            const env = {
+                'TS_NODE_SKIP_PROJECT': 'true',
+                'TS_NODE_FILES': 'true', // Process all .ts files, including dynamically required ones
+                'TS_NODE_COMPILER_OPTIONS': JSON.stringify({
+                    inlineSourceMap: true,
+                    inlineSources: true,
+                    sourceRoot: root,
+                    outDir: context.globalStorageUri.fsPath
+                })
+            };
 
             // Create debug configuration using node and ts-node register
             const debugConfig: vscode.DebugConfiguration = {
                 type: 'pwa-node',
                 request: 'launch',
                 name: `Debug Part ${part}`,
-                program: runnerPath,
+                program: debugWrapperPath,
                 cwd: root,
                 runtimeArgs: [
                     '-r',
                     tsNodeRegisterPath
                 ],
-                env: {
-                    'TS_NODE_COMPILER_OPTIONS': '{"module":"commonjs","target":"ES2022","inlineSourceMap":true,"inlineSources":true}'
-                },
+                env: env,
+                sourceMaps: true,
+                resolveSourceMapLocations: [
+                    '**',
+                    '!**/node_modules/**'
+                ],
                 console: 'integratedTerminal',
                 internalConsoleOptions: 'neverOpen',
                 skipFiles: ['<node_internals>/**'],
-                // No need for outFiles or sourceMaps with ts-node in this context as it handles source mapping on fly
             };
 
             // Start debugging

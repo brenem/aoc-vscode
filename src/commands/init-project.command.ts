@@ -110,6 +110,17 @@ export class InitProjectCommand implements ICommand {
 			await fs.promises.mkdir(utilsDir, { recursive: true });
 		}
 
+		// Create tsconfig.json for TypeScript projects
+		if (language === 'typescript') {
+			const tsconfigPath = path.join(workspaceRoot, 'tsconfig.json');
+			if (!fs.existsSync(tsconfigPath)) {
+				const templatePath = path.join(__dirname, '..', '..', 'templates', 'tsconfig.json');
+				if (fs.existsSync(templatePath)) {
+					await fs.promises.copyFile(templatePath, tsconfigPath);
+				}
+			}
+		}
+
 		// Create a sample utility file based on language
 		const utilityFileName = language === 'typescript' ? 'helpers.ts' : 
 		                        language === 'javascript' ? 'helpers.js' :

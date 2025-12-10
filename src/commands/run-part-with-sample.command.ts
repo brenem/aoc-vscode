@@ -111,11 +111,16 @@ export class RunPartWithSampleCommand implements ICommand {
             this.outputChannel.appendLine('🧪 Running with SAMPLE input...\n');
             
             // Execute and capture output - using ts-node
-            // Adding --experimental-specifier-resolution=node allows importing extensionless paths even in ESM mode
-            const env = { 
+            // Force ts-node to ignore user's tsconfig.json and use its defaults
+            const env = {
                 ...process.env,
-                'TS_NODE_COMPILER_OPTIONS': '{"module":"commonjs","target":"ES2022"}'
+                'TS_NODE_SKIP_PROJECT': 'true',
+                'TS_NODE_COMPILER_OPTIONS': JSON.stringify({
+                    allowImportingTsExtensions: true,
+                    noEmit: true
+                })
             };
+            const command = `npx ts-node --experimental-specifier-resolution=node "${runnerPath}"`;
             
             await vscode.window.withProgress({
                 location: vscode.ProgressLocation.Notification,
@@ -123,7 +128,7 @@ export class RunPartWithSampleCommand implements ICommand {
                 cancellable: true
             }, async (progress, token) => {
                 return new Promise<void>((resolve, reject) => {
-                    const child = exec(`npx ts-node --experimental-specifier-resolution=node "${runnerPath}"`, { cwd: root, env }, (error, stdout, stderr) => {
+                    const child = exec(command, { cwd: root, env }, (error, stdout, stderr) => {
                         if (error && !token.isCancellationRequested) {
                             this.outputChannel.appendLine(`Error: ${error.message}`);
                             if (stderr) {

@@ -29,15 +29,19 @@ export function createRunner(config: RunnerConfig): string {
         .replace(/`/g, '\\`')
         .replace(/\$/g, '\\$');
     
-// Use absolute path for import - ts-node in CommonJS mode can handle .ts files directly
+// Use absolute path for import - ESM requires .ts extension for dynamic import
 const importPath = solutionPath.replace(/\\/g, '/');
 
 const runnerCode = `
-const { part${part} } = require('${importPath}');
+import * as fs from 'fs';
 
 const input = \`${escapedInput}\`;
 
 (async () => {
+    // Use dynamic import to load the solution module
+    const solution = await import('${importPath}');
+    const part${part} = solution.part${part};
+
     console.log('='.repeat(50));
     console.log('Running Part ${part}');
     console.log('='.repeat(50));

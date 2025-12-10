@@ -50,14 +50,20 @@ export class SolutionDiagnosticsService {
     }
 
     public checkSolution(uri: vscode.Uri, realPath: string, content?: string): boolean {
-        const compilerOptions: ts.CompilerOptions = {
-            target: ts.ScriptTarget.ES2020,
-            module: ts.ModuleKind.CommonJS,
-            moduleResolution: ts.ModuleResolutionKind.NodeJs,
-            esModuleInterop: true,
-            skipLibCheck: true,
-            noEmit: true
-        };
+        // Find workspace root for this file
+        const workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
+        const workspaceRoot = workspaceFolder?.uri.fsPath;
+
+        // Read compiler options from tsconfig.json or use defaults
+        let compilerOptions: ts.CompilerOptions;
+        if (workspaceRoot) {
+            const { readTsconfig } = require('../helpers/tsconfig-helper');
+            compilerOptions = readTsconfig(workspaceRoot);
+        } else {
+            // Fallback to defaults if no workspace
+            const { getDefaultCompilerOptions } = require('../helpers/tsconfig-helper');
+            compilerOptions = getDefaultCompilerOptions();
+        }
 
         // Create a host that reads from the provided content if available
         const host = ts.createCompilerHost(compilerOptions);

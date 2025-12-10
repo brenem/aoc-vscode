@@ -36,6 +36,10 @@
         "title": "AoC: Initialize Project"
       },
       {
+        "command": "aoc.generateTsconfig",
+        "title": "AoC: Generate tsconfig.json"
+      },
+      {
         "command": "aoc.generateDay",
         "title": "Add Day",
         "icon": "$(add)"
