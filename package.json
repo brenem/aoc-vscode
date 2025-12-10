@@ -10,24 +10,15 @@
     "Other"
   ],
   "activationEvents": [
-    "onFileSystem:aoc-solution"
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "aoc-container",
-          "title": "Advent of Code",
-          "icon": "resources/icon.svg"
-        }
-      ]
-    },
     "views": {
-      "aoc-container": [
+      "explorer": [
         {
           "id": "aocExplorer",
-          "name": "Advent of Code"
+          "name": "AoC Explorer"
         }
       ]
     },
