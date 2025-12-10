@@ -73,6 +73,9 @@ export class RunPartWithSampleCommand implements ICommand {
             return;
         }
 
+        // Save all unsaved files before running
+        await vscode.workspace.saveAll();
+
         try {
             // Ensure temp directory exists FIRST
             if (!fs.existsSync(context.globalStorageUri.fsPath)) {

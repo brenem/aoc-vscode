@@ -66,6 +66,9 @@ export class RunPartCommand implements ICommand {
 
         const inputPath = path.join(root, 'solutions', year, dayDir, 'input.txt');
 
+        // Save all unsaved files before running
+        await vscode.workspace.saveAll();
+
         try {
             // Ensure temp directory exists FIRST
             if (!fs.existsSync(context.globalStorageUri.fsPath)) {

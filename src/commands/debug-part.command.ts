@@ -57,6 +57,9 @@ export class DebugPartCommand implements ICommand {
 
         const inputPath = path.join(root, 'solutions', year, dayDir, 'input.txt');
 
+        // Save all unsaved files before debugging
+        await vscode.workspace.saveAll();
+
             // Ensure temp directory exists
         try {
             if (!fs.existsSync(context.globalStorageUri.fsPath)) {

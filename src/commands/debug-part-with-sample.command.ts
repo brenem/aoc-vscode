@@ -64,6 +64,9 @@ export class DebugPartWithSampleCommand implements ICommand {
             return;
         }
 
+        // Save all unsaved files before debugging
+        await vscode.workspace.saveAll();
+
         try {
             // Ensure temp directory exists FIRST
             if (!fs.existsSync(context.globalStorageUri.fsPath)) {
