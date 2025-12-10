@@ -91,3 +91,39 @@ export function toTsNodeOptions(options: ts.CompilerOptions): string {
 
 	return JSON.stringify(tsNodeOptions);
 }
+
+/**
+ * Convert TypeScript CompilerOptions (with enum values) to plain object with string values
+ * This is needed because ts-node expects string values when passing via TS_NODE_COMPILER_OPTIONS
+ * @param options TypeScript compiler options
+ * @returns Plain object with string values
+ */
+export function convertCompilerOptionsToStrings(options: ts.CompilerOptions): Record<string, any> {
+	const result: Record<string, any> = {};
+	
+	for (const [key, value] of Object.entries(options)) {
+		// Convert specific enum values to strings
+		switch (key) {
+			case 'target':
+				result[key] = value !== undefined ? ts.ScriptTarget[value as ts.ScriptTarget].toLowerCase() : undefined;
+				break;
+			case 'module':
+				result[key] = value !== undefined ? ts.ModuleKind[value as ts.ModuleKind].toLowerCase() : undefined;
+				break;
+			case 'moduleResolution':
+				result[key] = value !== undefined ? ts.ModuleResolutionKind[value as ts.ModuleResolutionKind].toLowerCase() : undefined;
+				break;
+			case 'jsx':
+				result[key] = value !== undefined ? ts.JsxEmit[value as ts.JsxEmit].toLowerCase() : undefined;
+				break;
+			case 'newLine':
+				result[key] = value !== undefined ? ts.NewLineKind[value as ts.NewLineKind] : undefined;
+				break;
+			default:
+				// For other properties, keep as-is
+				result[key] = value;
+		}
+	}
+	
+	return result;
+}

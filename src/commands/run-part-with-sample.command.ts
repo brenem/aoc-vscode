@@ -110,15 +110,21 @@ export class RunPartWithSampleCommand implements ICommand {
             this.outputChannel.show(true);
             this.outputChannel.appendLine('🧪 Running with SAMPLE input...\n');
             
-            // Execute and capture output - using ts-node
-            // Force ts-node to ignore user's tsconfig.json and use its defaults
-            const env = {
-                ...process.env,
-                'TS_NODE_SKIP_PROJECT': 'true',
-                'TS_NODE_COMPILER_OPTIONS': JSON.stringify({
+            // Use transpile-only mode to skip type checking
+            const tempTsconfigPath = path.join(context.globalStorageUri.fsPath, 'tsconfig.runner.json');
+            const tempTsconfig = {
+                extends: path.join(root, 'tsconfig.json'),
+                compilerOptions: {
                     allowImportingTsExtensions: true,
                     noEmit: true
-                })
+                }
+            };
+            fs.writeFileSync(tempTsconfigPath, JSON.stringify(tempTsconfig, null, 2));
+            
+            const env = {
+                ...process.env,
+                'TS_NODE_PROJECT': tempTsconfigPath,
+                'TS_NODE_TRANSPILE_ONLY': 'true'
             };
             const command = `npx ts-node --experimental-specifier-resolution=node "${runnerPath}"`;
             

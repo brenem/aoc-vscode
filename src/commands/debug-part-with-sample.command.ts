@@ -123,18 +123,21 @@ debug().catch(console.error);
             // Locate ts-node/register within the extension
             const tsNodeRegisterPath = path.join(context.extensionPath, 'node_modules', 'ts-node', 'register', 'index.js');
 
-            // Force ts-node to ignore the user's tsconfig.json and use its defaults
-            // This ensures Node.js types are available
-            // Also configure source maps so breakpoints work
-            const env = {
-                'TS_NODE_SKIP_PROJECT': 'true',
-                'TS_NODE_FILES': 'true', // Process all .ts files, including dynamically required ones
-                'TS_NODE_COMPILER_OPTIONS': JSON.stringify({
+            // Use transpile-only mode to skip type checking
+            const tempTsconfigPath = path.join(context.globalStorageUri.fsPath, 'tsconfig.debug.json');
+            const tempTsconfig = {
+                extends: path.join(root, 'tsconfig.json'),
+                compilerOptions: {
                     inlineSourceMap: true,
                     inlineSources: true,
-                    sourceRoot: root,
                     outDir: context.globalStorageUri.fsPath
-                })
+                }
+            };
+            fs.writeFileSync(tempTsconfigPath, JSON.stringify(tempTsconfig, null, 2));
+            
+            const env = {
+                'TS_NODE_PROJECT': tempTsconfigPath,
+                'TS_NODE_TRANSPILE_ONLY': 'true'
             };
 
             // Create debug configuration using node and ts-node register
