@@ -278,11 +278,47 @@ export class PuzzleService {
             padding: 15px;
             border-radius: 5px;
             overflow-x: auto;
+            position: relative;
         }
         
         pre code {
             background: none;
             padding: 0;
+        }
+        
+        .code-block-wrapper {
+            position: relative;
+        }
+        
+        .copy-button {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            padding: 4px 8px;
+            background-color: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
+            border: 1px solid var(--vscode-button-border);
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        .code-block-wrapper:hover .copy-button {
+            opacity: 1;
+        }
+        
+        .copy-button:hover {
+            background-color: var(--vscode-button-hoverBackground);
+        }
+        
+        .copy-button:active {
+            background-color: var(--vscode-button-background);
+        }
+        
+        .copy-button.copied {
+            background-color: var(--vscode-button-secondaryBackground);
         }
         
         em {
@@ -375,7 +411,62 @@ export class PuzzleService {
             // Update content
             document.querySelectorAll('.part-content').forEach(content => content.classList.remove('active'));
             document.getElementById('part' + partNum).classList.add('active');
+            
+            // Re-add copy buttons for the newly visible part
+            addCopyButtons();
         }
+        
+        function addCopyButtons() {
+            // Find all pre>code blocks that aren't already wrapped
+            document.querySelectorAll('pre:not(.wrapped) code').forEach(codeBlock => {
+                const pre = codeBlock.parentElement;
+                pre.classList.add('wrapped');
+                
+                // Create wrapper div
+                const wrapper = document.createElement('div');
+                wrapper.className = 'code-block-wrapper';
+                
+                // Create copy button
+                const copyButton = document.createElement('button');
+                copyButton.className = 'copy-button';
+                copyButton.textContent = 'Copy';
+                copyButton.onclick = function(e) {
+                    e.preventDefault();
+                    copyToClipboard(codeBlock.textContent.trim(), copyButton);
+                };
+                
+                // Wrap the pre element
+                pre.parentNode.insertBefore(wrapper, pre);
+                wrapper.appendChild(pre);
+                wrapper.appendChild(copyButton);
+            });
+        }
+        
+        function copyToClipboard(text, button) {
+            // Use VS Code's clipboard API
+            navigator.clipboard.writeText(text).then(() => {
+                // Visual feedback
+                const originalText = button.textContent;
+                button.textContent = 'Copied!';
+                button.classList.add('copied');
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+                button.textContent = 'Error';
+                setTimeout(() => {
+                    button.textContent = 'Copy';
+                }, 2000);
+            });
+        }
+        
+        // Add copy buttons when page loads
+        document.addEventListener('DOMContentLoaded', addCopyButtons);
+        // Also add them immediately in case DOMContentLoaded already fired
+        addCopyButtons();
     </script>
 </body>
 </html>`;
