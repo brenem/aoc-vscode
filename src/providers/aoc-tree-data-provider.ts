@@ -3,6 +3,7 @@ import * as path from "path";
 import * as fs from "fs";
 import { injectable } from "tsyringe";
 import { StatsService } from "../services/stats.service";
+import { AocWorkspaceService } from "../services/aoc-workspace.service";
 
 export class AocTreeItem extends vscode.TreeItem {
     constructor(
@@ -39,12 +40,16 @@ export class AocTreeDataProvider implements vscode.TreeDataProvider<AocTreeItem>
     private workspaceRoot: string;
     private isInitialized = false;
 
-    constructor(private statsService: StatsService) {
-        const workspaceFolders = vscode.workspace.workspaceFolders;
-        if (!workspaceFolders) {
-            console.log('No workspace open. AoC extension is idle.');
+    constructor(
+        private statsService: StatsService,
+        private workspaceService: AocWorkspaceService
+    ) {
+        // Get the first AOC workspace
+        const aocWorkspace = this.workspaceService.getFirstAocWorkspace();
+        if (!aocWorkspace) {
+            console.log('No AOC workspace detected. Run "AoC: Initialize Project" to create one.');
         }
-        this.workspaceRoot = workspaceFolders?.[0].uri.fsPath || '';
+        this.workspaceRoot = aocWorkspace || '';
     }
 
     get root(): string {
@@ -112,9 +117,13 @@ export class AocTreeDataProvider implements vscode.TreeDataProvider<AocTreeItem>
     }
 
     async getChildren(element?: AocTreeItem): Promise<AocTreeItem[] | undefined> {
-        // Return undefined when not initialized to prevent welcome message from showing
+        // Show loading message while initializing
         if (!this.isInitialized) {
-            return undefined;
+            return [new AocTreeItem(
+                'Loading...',
+                vscode.TreeItemCollapsibleState.None,
+                'year'
+            )];
         }
 
         if (!this.workspaceRoot) {
@@ -142,11 +151,19 @@ export class AocTreeDataProvider implements vscode.TreeDataProvider<AocTreeItem>
                 ));
             }
 
-            const years = fs
+            let years = fs
                 .readdirSync(solutionsRoot, { withFileTypes: true })
                 .filter(d => d.isDirectory() && d.name !== 'shared')
                 .map(d => d.name)
-                .sort();
+                .sort((a, b) => b.localeCompare(a)); // Sort descending
+
+            // Auto-create current year if no years exist
+            if (years.length === 0) {
+                const currentYear = new Date().getFullYear().toString();
+                const yearDir = path.join(solutionsRoot, currentYear);
+                fs.mkdirSync(yearDir, { recursive: true });
+                years = [currentYear];
+            }
 
             items.push(...years.map(year => new AocTreeItem(
                 year,

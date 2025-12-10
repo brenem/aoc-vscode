@@ -29,10 +29,31 @@ import { SubmitSolutionCommand } from './commands/submit-solution.command';
 import { RefreshPuzzleCommand } from './commands/refresh-puzzle.command';
 import { MarkPartSolvedCommand } from './commands/mark-part-solved.command';
 import { DebugStatsCommand } from './commands/debug-stats.command';
+import { AocWorkspaceService } from './services/aoc-workspace.service';
+import { InitProjectCommand } from './commands/init-project.command';
+import { AOC_CONFIG_FILENAME } from './common/aoc-config.interface';
 
 export async function initialize(context: vscode.ExtensionContext): Promise<void> {
 	registerServices(context);
-	await addProviders(context);
+	
+	// Detect AOC workspaces
+	const workspaceService = container.resolve(AocWorkspaceService);
+	const aocWorkspaces = await workspaceService.findAocWorkspaces();
+	
+	if (aocWorkspaces.length > 0) {
+		// Set context to show tree view
+		await vscode.commands.executeCommand('setContext', 'aocWorkspaceDetected', true);
+		
+		// Initialize providers and features
+		await addProviders(context);
+	} else {
+		// No AOC workspaces detected
+		await vscode.commands.executeCommand('setContext', 'aocWorkspaceDetected', false);
+		console.log('No AOC workspaces detected. Run "AoC: Initialize Project" to create one.');
+	}
+	
+	// Watch for .aoc.json file changes to dynamically activate/deactivate
+	setupWorkspaceWatcher(context, workspaceService);
 }
 
 function registerServices(context: vscode.ExtensionContext) {
@@ -41,6 +62,10 @@ function registerServices(context: vscode.ExtensionContext) {
 
 	// Register infrastructure
 	container.registerSingleton(ICommandManager, CommandManager);
+	container.registerSingleton(AocWorkspaceService);
+	
+	// Register commands
+	container.register<ICommand>(ICommand, { useClass: InitProjectCommand });
 	container.register<ICommand>(ICommand, { useClass: AddUtilityCommand });
 	container.register<ICommand>(ICommand, { useClass: GenerateDayCommand });
 	container.register<ICommand>(ICommand, { useClass: OpenDayCommand });
@@ -188,6 +213,58 @@ async function addTreeDataProvider(context: vscode.ExtensionContext) {
 		fileWatcher.onDidChange(() => aocProvider.refresh());
 		
 		context.subscriptions.push(fileWatcher);
+	}
+}
+
+/**
+ * Setup file watchers to detect when .aoc.json files are created or deleted
+ */
+function setupWorkspaceWatcher(
+	context: vscode.ExtensionContext,
+	workspaceService: AocWorkspaceService
+) {
+	const workspaceFolders = vscode.workspace.workspaceFolders;
+	if (!workspaceFolders) {
+		return;
+	}
+
+	// Track whether providers have been initialized
+	let providersInitialized = workspaceService.getAocWorkspaces().length > 0;
+
+	for (const folder of workspaceFolders) {
+		const pattern = new vscode.RelativePattern(folder, AOC_CONFIG_FILENAME);
+		const watcher = vscode.workspace.createFileSystemWatcher(pattern);
+
+		// When .aoc.json is created
+		watcher.onDidCreate(async () => {
+			await workspaceService.refresh();
+			const aocWorkspaces = workspaceService.getAocWorkspaces();
+			
+			if (aocWorkspaces.length > 0) {
+				await vscode.commands.executeCommand('setContext', 'aocWorkspaceDetected', true);
+				
+				// Initialize providers if not already done
+				if (!providersInitialized) {
+					await addProviders(context);
+					providersInitialized = true;
+					vscode.window.showInformationMessage('AOC workspace initialized successfully!');
+				}
+			}
+		});
+
+		// When .aoc.json is deleted
+		watcher.onDidDelete(async () => {
+			await workspaceService.refresh();
+			const aocWorkspaces = workspaceService.getAocWorkspaces();
+			
+			if (aocWorkspaces.length === 0) {
+				await vscode.commands.executeCommand('setContext', 'aocWorkspaceDetected', false);
+				// Note: We don't un-initialize providers as that would require complex cleanup
+				// The tree view will simply be hidden via the 'when' clause
+			}
+		});
+
+		context.subscriptions.push(watcher);
 	}
 }
 

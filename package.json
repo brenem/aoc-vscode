@@ -10,7 +10,8 @@
     "Other"
   ],
   "activationEvents": [
-    "onStartupFinished"
+    "onStartupFinished",
+    "onCommand:aoc.initProject"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -19,7 +20,7 @@
         {
           "id": "aocExplorer",
           "name": "AoC Explorer",
-          "when": "aocInitialized"
+          "when": "aocWorkspaceDetected"
         }
       ]
     },
@@ -30,6 +31,10 @@
       }
     ],
     "commands": [
+      {
+        "command": "aoc.initProject",
+        "title": "AoC: Initialize Project"
+      },
       {
         "command": "aoc.generateDay",
         "title": "Add Day",

@@ -21,7 +21,15 @@ export class GenerateDayCommand implements ICommand {
         const root = this.aocProvider.root;
 
         if (!root) {
-            vscode.window.showErrorMessage('Open a workspace folder first.');
+            const action = await vscode.window.showErrorMessage(
+                'No AOC workspace detected. Would you like to initialize this workspace as an AOC project?',
+                'Initialize Project',
+                'Cancel'
+            );
+            
+            if (action === 'Initialize Project') {
+                await vscode.commands.executeCommand('aoc.initProject');
+            }
             return;
         }
 
