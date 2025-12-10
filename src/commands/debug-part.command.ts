@@ -6,6 +6,7 @@ import { ICommand } from '../common/types';
 import { AocTreeDataProvider } from '../providers/aoc-tree-data-provider';
 import { injectable } from 'tsyringe';
 import { createRunner } from '../helpers/create-runner';
+import { checkAndShowErrors } from '../helpers/check-file-errors';
 
 @injectable()
 export class DebugPartCommand implements ICommand {
@@ -56,6 +57,11 @@ export class DebugPartCommand implements ICommand {
         const solutionPath = filePath;
 
         const inputPath = path.join(root, 'solutions', year, dayDir, 'input.txt');
+
+        // Check for errors before debugging
+        if (checkAndShowErrors(active.document)) {
+            return;
+        }
 
         // Save all unsaved files before debugging
         await vscode.workspace.saveAll();

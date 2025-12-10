@@ -6,6 +6,7 @@ import { ICommand } from '../common/types';
 import { AocTreeDataProvider } from '../providers/aoc-tree-data-provider';
 import { injectable } from 'tsyringe';
 import { createRunner } from '../helpers/create-runner';
+import { checkAndShowErrors } from '../helpers/check-file-errors';
 
 @injectable()
 export class DebugPartWithSampleCommand implements ICommand {
@@ -68,6 +69,11 @@ export class DebugPartWithSampleCommand implements ICommand {
         const sampleContent = fs.readFileSync(samplePath, 'utf8');
         if (sampleContent.trim().length === 0) {
             vscode.window.showErrorMessage('sample.txt is empty. Please add sample input before debugging.');
+            return;
+        }
+
+        // Check for errors before debugging
+        if (checkAndShowErrors(active.document)) {
             return;
         }
 

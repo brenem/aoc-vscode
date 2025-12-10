@@ -7,6 +7,7 @@ import { AocTreeDataProvider } from '../providers/aoc-tree-data-provider';
 import { StatsService, PartStats } from '../services/stats.service';
 import { injectable } from 'tsyringe';
 import { createRunner } from '../helpers/create-runner';
+import { checkAndShowErrors } from '../helpers/check-file-errors';
 
 @injectable()
 export class RunPartCommand implements ICommand {
@@ -64,6 +65,11 @@ export class RunPartCommand implements ICommand {
         const solutionPath = filePath;
 
         const inputPath = path.join(root, 'solutions', year, dayDir, 'input.txt');
+
+        // Check for errors before running
+        if (checkAndShowErrors(active.document)) {
+            return;
+        }
 
         // Save all unsaved files before running
         await vscode.workspace.saveAll();

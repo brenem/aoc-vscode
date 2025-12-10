@@ -8,6 +8,7 @@ import { AocTreeDataProvider } from '../providers/aoc-tree-data-provider';
 import { StatsService, PartStats } from '../services/stats.service';
 import { injectable } from 'tsyringe';
 import { createRunner } from '../helpers/create-runner';
+import { checkAndShowErrors } from '../helpers/check-file-errors';
 
 @injectable()
 export class RunPartWithSampleCommand implements ICommand {
@@ -77,6 +78,11 @@ export class RunPartWithSampleCommand implements ICommand {
         const sampleContent = fs.readFileSync(samplePath, 'utf8');
         if (sampleContent.trim().length === 0) {
             vscode.window.showErrorMessage('sample.txt is empty. Please add sample input before running.');
+            return;
+        }
+
+        // Check for errors before running
+        if (checkAndShowErrors(active.document)) {
             return;
         }
 
