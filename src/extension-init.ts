@@ -33,6 +33,10 @@ import { AocWorkspaceService } from './services/aoc-workspace.service';
 import { InitProjectCommand } from './commands/init-project.command';
 import { GenerateTsconfigCommand } from './commands/generate-tsconfig.command';
 import { AOC_CONFIG_FILENAME } from './common/aoc-config.interface';
+import { StatsService } from './services/stats.service';
+import { PuzzleService } from './services/puzzle.service';
+import { AocSessionService } from './services/aoc-session.service';
+import { SubmissionService } from './services/submission.service';
 
 export async function initialize(context: vscode.ExtensionContext): Promise<void> {
 	registerServices(context);
@@ -64,6 +68,17 @@ function registerServices(context: vscode.ExtensionContext) {
 	// Register infrastructure
 	container.registerSingleton(ICommandManager, CommandManager);
 	container.registerSingleton(AocWorkspaceService);
+	
+	// Register services as singletons to ensure all components share the same instance
+	container.registerSingleton(StatsService);
+	container.registerSingleton(AocTreeDataProvider);
+	container.registerSingleton(PuzzleService);
+	container.registerSingleton(AocSessionService);
+	container.registerSingleton(SubmissionService);
+	container.registerSingleton(TreeViewService);
+	container.registerSingleton(PuzzleWebviewSerializer);
+	container.registerSingleton(SolutionCodeLensProvider);
+	container.registerSingleton(SolutionDiagnosticsService);
 	
 	// Register commands
 	container.register<ICommand>(ICommand, { useClass: InitProjectCommand });
