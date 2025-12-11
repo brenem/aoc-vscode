@@ -34,8 +34,9 @@ export class GenerateDayCommand implements ICommand {
         }
 
         // Check if year was passed from tree item context
+        // Only use year from context if it's actually a year tree item
         const treeItem = args[0] as AocTreeItem | undefined;
-        const yearFromContext = treeItem?.year;
+        const yearFromContext = (treeItem?.contextValue === 'year') ? treeItem.year : undefined;
 
         let year = yearFromContext;
         if (!year) {
@@ -50,11 +51,14 @@ export class GenerateDayCommand implements ICommand {
         }
 
         const day = await vscode.window.showInputBox({
-            prompt:
-                new Date().getFullYear() < 2025 ? 'Day (1-25)' : 'Day (1-12)',
+            prompt: parseInt(year!) < 2025 ? 'Day (1-25)' : 'Day (1-12)',
             validateInput: (value) => {
                 const n = Number(value);
-                const numDays = new Date().getFullYear() < 2025 ? 25 : 12;
+                const selectedYear = parseInt(year!);
+                
+                // 2025 onwards: 12 days, Earlier years: 25 days
+                const numDays = selectedYear < 2025 ? 25 : 12;
+                
                 return n >= 1 && n <= numDays
                     ? undefined
                     : `Enter a number between 1 and ${numDays}`;

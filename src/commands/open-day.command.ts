@@ -32,7 +32,9 @@ export class OpenDayCommand implements ICommand {
                 return;
             }
 
-            const day = await vscode.window.showInputBox({ prompt: new Date().getFullYear() < 2025 ? 'Day (1-25)' : 'Day (1-12)' });
+            const day = await vscode.window.showInputBox({ 
+                prompt: parseInt(year) < 2025 ? 'Day (1-25)' : 'Day (1-12)' 
+            });
             if (!day) {
                 return;
             }
