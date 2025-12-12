@@ -3,6 +3,8 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { injectable } from 'tsyringe';
 import { AocWorkspaceService } from '../services/aoc-workspace.service';
+import { GitService } from '../services/git.service';
+import { ReadmeService } from '../services/readme.service';
 import { ICommand } from '../common/types';
 
 /**
@@ -12,7 +14,11 @@ import { ICommand } from '../common/types';
 export class InitProjectCommand implements ICommand {
 	public readonly id = 'aoc.initProject';
 
-	constructor(private workspaceService: AocWorkspaceService) {}
+	constructor(
+		private workspaceService: AocWorkspaceService,
+		private gitService: GitService,
+		private readmeService: ReadmeService
+	) {}
 
 	async execute(): Promise<void> {
 		// Get the workspace folder to initialize
@@ -75,9 +81,23 @@ export class InitProjectCommand implements ICommand {
 			// Refresh workspace cache
 			await this.workspaceService.refresh();
 
+			// Prompt for git initialization
+			const initGit = await vscode.window.showInformationMessage(
+				'Do you want to initialize a git repository?',
+				'Yes',
+				'No'
+			);
+
+			if (initGit === 'Yes') {
+				await this.gitService.initialize(targetFolder.uri.fsPath, language);
+			}
+
 			vscode.window.showInformationMessage(
 				'AOC project initialized successfully!'
 			);
+
+            // Create README
+            await this.readmeService.create(targetFolder.uri.fsPath, language);
 
 			// Set context to trigger extension activation
 			await vscode.commands.executeCommand('setContext', 'aocWorkspaceDetected', true);

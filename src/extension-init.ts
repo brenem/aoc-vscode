@@ -37,6 +37,10 @@ import { StatsService } from './services/stats.service';
 import { PuzzleService } from './services/puzzle.service';
 import { AocSessionService } from './services/aoc-session.service';
 import { SubmissionService } from './services/submission.service';
+import { GitService } from './services/git.service';
+import { InitGitCommand } from './commands/init-git.command';
+import { ReadmeService } from './services/readme.service';
+import { GenerateReadmeCommand } from './commands/generate-readme.command';
 
 export async function initialize(context: vscode.ExtensionContext): Promise<void> {
 	registerServices(context);
@@ -68,6 +72,8 @@ function registerServices(context: vscode.ExtensionContext) {
 	// Register infrastructure
 	container.registerSingleton(ICommandManager, CommandManager);
 	container.registerSingleton(AocWorkspaceService);
+	container.registerSingleton(GitService);
+	container.registerSingleton(ReadmeService);
 	
 	// Register services as singletons to ensure all components share the same instance
 	container.registerSingleton(StatsService);
@@ -103,6 +109,8 @@ function registerServices(context: vscode.ExtensionContext) {
 	container.register<ICommand>(ICommand, { useClass: RefreshPuzzleCommand });
 	container.register<ICommand>(ICommand, { useClass: MarkPartSolvedCommand });
 	container.register<ICommand>(ICommand, { useClass: DebugStatsCommand });
+	container.register<ICommand>(ICommand, { useClass: InitGitCommand });
+	container.register<ICommand>(ICommand, { useClass: GenerateReadmeCommand });
 }
 
 async function addProviders(context: vscode.ExtensionContext) {

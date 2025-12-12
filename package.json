@@ -36,6 +36,14 @@
         "title": "AoC: Initialize Project"
       },
       {
+        "command": "aoc.initGit",
+        "title": "AoC: Initialize Git Repository"
+      },
+      {
+        "command": "aoc.generateReadme",
+        "title": "AoC: Generate README"
+      },
+      {
         "command": "aoc.generateTsconfig",
         "title": "AoC: Generate tsconfig.json"
       },
