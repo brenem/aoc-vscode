@@ -135,14 +135,7 @@ async function addTreeDataProvider(context: vscode.ExtensionContext) {
 	// Get the provider instance
 	const aocProvider = container.resolve(AocTreeDataProvider);
 	
-	// Initialize the provider BEFORE registering
-	// This ensures getChildren() won't be called before we're ready
-	await aocProvider.initialize();
-	
-	// Set context to make the view visible
-	await vscode.commands.executeCommand('setContext', 'aocInitialized', true);
-	
-	// Now register the tree data provider - this creates the view
+	// Create the tree view first so we can show progress on it
 	const treeView = vscode.window.createTreeView('aocExplorer', {
 		treeDataProvider: aocProvider,
 		showCollapseAll: true
@@ -153,6 +146,14 @@ async function addTreeDataProvider(context: vscode.ExtensionContext) {
 	treeViewService.setTreeView(treeView);
 
 	context.subscriptions.push(treeView);
+
+	// Set context to make the view visible
+	await vscode.commands.executeCommand('setContext', 'aocInitialized', true);
+
+	// Initialize the provider with progress bar
+	await vscode.window.withProgress({ location: { viewId: 'aocExplorer' } }, async () => {
+		await aocProvider.initialize();
+	});
 
 	// Sync tree view selection with active editor
 	const syncTreeViewSelection = () => {
