@@ -103,7 +103,7 @@ export class PuzzleService {
             }
         }
 
-        const part1Raw = part1ArticleContent + part1Suffix;
+        const part1Raw = this.cleanHtml(part1ArticleContent + part1Suffix);
         const part1 = this.resolveLinks(part1Raw);
 
         // Process Part 2
@@ -120,11 +120,24 @@ export class PuzzleService {
                 part2Suffix = html.substring(part2EndIndex);
             }
             
-            const part2Raw = part2ArticleContent + part2Suffix;
+            const part2Raw = this.cleanHtml(part2ArticleContent + part2Suffix);
             part2 = this.resolveLinks(part2Raw);
         }
 
         return { part1, part2, title };
+    }
+
+    private cleanHtml(html: string): string {
+        // Remove "To begin, get your puzzle input" paragraph
+        html = html.replace(/<p>To begin, [^<]*<a[^>]*>get your puzzle input<\/a>[^<]*\.<\/p>/gi, '');
+
+        // Remove the submission form
+        html = html.replace(/<form[^>]*action="[^"]*answer"[^>]*>[\s\S]*?<\/form>/gi, '');
+
+        // Remove the "You can also [Share ...]" paragraph
+        html = html.replace(/<p>You can also <span class="share">[\s\S]*?<\/span> this puzzle\.<\/p>/gi, '');
+
+        return html;
     }
 
     private resolveLinks(html: string): string {
