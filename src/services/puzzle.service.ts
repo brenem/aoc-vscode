@@ -76,11 +76,53 @@ export class PuzzleService {
         const title = titleMatch ? titleMatch[1] : 'Advent of Code Puzzle';
 
         // Extract puzzle descriptions (articles with class="day-desc")
-        const articleRegex = /<article class="day-desc">(.+?)<\/article>/gs;
-        const articles = [...html.matchAll(articleRegex)];
+        // Use capturing group to get inner content
+        const articleRegex = /<article class="day-desc">([\s\S]+?)<\/article>/g;
+        const matches = [...html.matchAll(articleRegex)];
 
-        const part1 = articles[0] ? this.resolveLinks(articles[0][1]) : '';
-        const part2 = articles[1] ? this.resolveLinks(articles[1][1]) : undefined;
+        if (matches.length === 0) {
+            return { part1: '', part2: undefined, title };
+        }
+
+        // Process Part 1
+        const part1ArticleContent = matches[0][1];
+        const part1EndIndex = matches[0].index! + matches[0][0].length;
+        
+        let part1Suffix = '';
+        if (matches.length > 1) {
+            // Part 1 suffix is everything between end of Part 1 article and start of Part 2 article
+            const part2StartIndex = matches[1].index!;
+            part1Suffix = html.substring(part1EndIndex, part2StartIndex);
+        } else {
+            // Part 1 suffix is everything until </main> or end
+            const mainEnd = html.indexOf('</main>', part1EndIndex);
+            if (mainEnd !== -1) {
+                part1Suffix = html.substring(part1EndIndex, mainEnd);
+            } else {
+                part1Suffix = html.substring(part1EndIndex);
+            }
+        }
+
+        const part1Raw = part1ArticleContent + part1Suffix;
+        const part1 = this.resolveLinks(part1Raw);
+
+        // Process Part 2
+        let part2 = undefined;
+        if (matches.length > 1) {
+            const part2ArticleContent = matches[1][1];
+            const part2EndIndex = matches[1].index! + matches[1][0].length;
+            
+            let part2Suffix = '';
+            const mainEnd = html.indexOf('</main>', part2EndIndex);
+             if (mainEnd !== -1) {
+                part2Suffix = html.substring(part2EndIndex, mainEnd);
+            } else {
+                part2Suffix = html.substring(part2EndIndex);
+            }
+            
+            const part2Raw = part2ArticleContent + part2Suffix;
+            part2 = this.resolveLinks(part2Raw);
+        }
 
         return { part1, part2, title };
     }
