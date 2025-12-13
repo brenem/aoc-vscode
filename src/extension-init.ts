@@ -39,6 +39,7 @@ import { AocSessionService } from './services/aoc-session.service';
 import { SubmissionService } from './services/submission.service';
 import { GitService } from './services/git.service';
 import { InitGitCommand } from './commands/init-git.command';
+import { InstallPackageCommand } from './commands/install-package.command';
 import { ReadmeService } from './services/readme.service';
 import { GenerateReadmeCommand } from './commands/generate-readme.command';
 
@@ -110,6 +111,7 @@ function registerServices(context: vscode.ExtensionContext) {
 	container.register<ICommand>(ICommand, { useClass: MarkPartSolvedCommand });
 	container.register<ICommand>(ICommand, { useClass: DebugStatsCommand });
 	container.register<ICommand>(ICommand, { useClass: InitGitCommand });
+	container.register<ICommand>(ICommand, { useClass: InstallPackageCommand });
 	container.register<ICommand>(ICommand, { useClass: GenerateReadmeCommand });
 }
 

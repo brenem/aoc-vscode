@@ -40,6 +40,11 @@
         "title": "AoC: Initialize Git Repository"
       },
       {
+        "command": "aoc.installPackage",
+        "title": "AoC: Install NPM Package",
+        "icon": "$(package)"
+      },
+      {
         "command": "aoc.generateReadme",
         "title": "AoC: Generate README"
       },
